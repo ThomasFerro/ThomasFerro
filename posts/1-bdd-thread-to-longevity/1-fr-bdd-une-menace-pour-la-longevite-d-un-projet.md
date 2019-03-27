@@ -6,7 +6,7 @@
 
 Le *Behavior-driven development* (ou **BDD**) est un processus de développement d'application faisant de plus en plus d'adeptes depuis quelques années.
 
-La promesse est simple: piloter le développement par des comportements attendus, rédigés lors d'ateliers réunissants des *profils techniques* et des *sachants du métier*.
+La promesse est simple: piloter le développement par des comportements attendus, rédigés lors d'ateliers réunissant des *profils techniques* et des *sachants du métier*.
 
 Sans entrer dans les détails, ces ateliers permettront de rédiger des spécifications dans un langage naturel (souvent la langue des intervenants), sous la forme de tests d'accéptences: les Gherkins.
 
@@ -14,7 +14,7 @@ Sans entrer dans les détails, ces ateliers permettront de rédiger des spécifi
 >
 > Scénario : Manger 5 des 12 concombres
 >
-> - Etant donné qu'il y a 12 concombres
+> - Étant donné qu'il y a 12 concombres
 > - Lorsque je mange 5 concombres
 > - Alors je dois avoir 7 concombres
 
@@ -36,7 +36,7 @@ Cette phase de refactorisation va, à la fin, créer une architecture **pilotée
 
 ## Les dangers de l'Agilité : Des spécifications toujours changeantes
 
-Toute personne ayant travaillée sur un projet Agile le sait bien, cette méthodologie implique deux grands axes dans la définition des spécifications. Ces dernières sont généralement :
+Toute personne ayant travaillait sur un projet Agile le sait bien, cette méthodologie implique deux grands axes dans la définition des spécifications. Ces dernières sont généralement :
 
 - Plus petites (voir atomique) afin d'être incrémentales; et
 - Surtout **changeantes**.
@@ -47,11 +47,11 @@ Chaque modification dans les promesses de votre application risque de faire s'ef
 
 ## Aparté sur la notion de métier
 
-Chaque application résoud des problématiques pour certains corps de métier.
+Chaque application résout des problématiques pour certains corps de métier.
 
 Une application de gestion de livres pourra, par exemple, résoudre des cas d'usages pour des *libraires*, des *éditeurs* et des *auteurs*. Elle aura donc trois domaines métier distincts.
 
-Il ne sagit pas ici de queston *technique*, et vous devriez toujours faire attention à bien séparer ces deux entités.
+Il ne s'agit pas ici de queston *technique*, et vous devriez toujours faire attention à bien séparer ces deux entités.
 
 Je vous redirige vers les concepts de Clean Architecture de Robert C. Martin pour plus de détails sur la façon de séparer métier et technique.
 
@@ -59,9 +59,9 @@ Je vous redirige vers les concepts de Clean Architecture de Robert C. Martin pou
 
 Imaginez maintenant une autre façon de penser l'architecture de votre projet.
 
-Ne pilotez plus vos développement par le *comportement*, mais par le **métier**.
+Ne pilotez plus vos développements par le *comportement*, mais par le **métier**.
 
-Piloter par le métier, c'est ce que propose un autre courant de pensée, le **Domain Driver Design** (ou *DDD*).
+Piloter par le métier, c'est ce que propose un autre courant de pensée, le **Domain Driven Design** (ou *DDD*).
 
 Le **DDD** est une approche de conception visant à remettre le métier au coeur du développement applicatif.
 
@@ -69,11 +69,11 @@ Sans entrer dans les détails (je vous invite à lire **Domain-Driven Design: Ta
 
 Mais nous irons ici un peu plus loin en mettant l'accent non sur les comportements attendus, mais sur les différents domaines métier.
 
-Cet accent sera mis via la création d'un contexte par domaine, dans lequel primeront **les entitées** et **la logique** liés à ce dernier.
+Cet accent sera mis via la création d'un contexte par domaine, dans lequel primeront **les entitées** et **la logique** liée à ce dernier.
 
-Cette approche vous permettrait donc d'avoir une base solide, basée du le métier, sur laquelle vous pourrez construire des applications **durables**, **testables** et **Agiles** !
+Cette approche vous permettrait donc d'avoir une base solide, basée sur le métier, sur laquelle vous pourrez construire des applications **durables**, **testables** et **Agiles** !
 
-En effet, une spécifications changeante n'impactera que la façon dont vous appelez les différents contextes de votre métier. Il vous faudra peut-être retravailler certains domaines, mais le plus gros du travail consistera à ageancer les briques qui composent votre application différemment.
+En effet, une spécifications changeante n'impactera que la façon dont vous appelez les différents contextes de votre métier. Il vous faudra peut-être retravailler certains domaines, mais le plus gros du travail consistera à agencer les briques qui composent votre application différemment.
 
 ## La place des Gherkins en approche DDD
 
@@ -81,9 +81,9 @@ Est-ce donc la fin des tests d'acceptances ? Doit-on jeter tous les Gherkins ré
 
 Bien sûr que non, je vous propose plutôt de les utiliser à une autre fin, qui me semble plus naturelle : **comme garde-fou**.
 
-Ainsi, nous aurions un projet qui reflête parfaitement le **métier** en jeu, et nous validerons que ce projet répond aux attentes des responsables et utilisateurs via les Gherkins.
+Ainsi, nous aurons un projet qui reflête parfaitement le **métier** en jeu, et nous validerons que ce projet répond aux attentes des responsables et utilisateurs via les Gherkins.
 
-Ces derniers ne pourrait utiliser le projet que comme un consommateur lambda, via l'API exposée. Cette pratique nous évitera de polluer le projet à cause des tests.
+Ces derniers ne pourraient utiliser le projet que comme un consommateur lambda, via l'API exposée. Cette pratique nous évitera de polluer le projet à cause des tests.
 
 ![Mariage DDD / Gherkins](https://github.com/ThomasFerro/readmes/blob/master/posts/1-bdd-thread-to-longevity/Mariage%20DDD%20_%20Gherkins.png)
 
