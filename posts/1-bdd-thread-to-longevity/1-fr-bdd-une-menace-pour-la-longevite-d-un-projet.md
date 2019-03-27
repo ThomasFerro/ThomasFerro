@@ -85,7 +85,7 @@ Ainsi, nous aurions un projet qui reflête parfaitement le **métier** en jeu, e
 
 Ces derniers ne pourrait utiliser le projet que comme un consommateur lambda, via l'API exposée. Cette pratique nous évitera de polluer le projet à cause des tests.
 
-![Mariage DDD / Gherkins](todo)
+![Mariage DDD / Gherkins](https://github.com/ThomasFerro/readmes/blob/master/posts/1-bdd-thread-to-longevity/Mariage%20DDD%20_%20Gherkins.png)
 
 > Gardez bien en tête que nous ne sommes pas là pour créer de la valeur *technique*, mais pour utiliser la technique afin de créer de la valeur **métier**.
 
