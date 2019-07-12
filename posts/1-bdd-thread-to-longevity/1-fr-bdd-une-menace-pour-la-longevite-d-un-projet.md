@@ -1,6 +1,6 @@
 # Le BDD est-il une menace pour la longévité de votre projet ?
 
-> Cet article n'est le reflet que de mon propre avis sur la question. Il a pour but d'ouvrir le débat et de potentiellement service de base de discussion.
+> Cet article n'est le reflet que de mon propre avis sur la question. Il a pour but d'ouvrir le débat et de potentiellement servir de base de discussion.
 
 ## Les promesses du BDD
 
