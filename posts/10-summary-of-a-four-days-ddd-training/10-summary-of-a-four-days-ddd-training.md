@@ -42,7 +42,7 @@ But what is *software complexity*? *Ben Moseley* and *Peter Marks* started their
 
 > *Essential complexity*: The complexity that cannot be reduced, that is required to answer the need.
 
-> *Mandatory accidental complexity*: The one can we cannot do without (the network, the programming language, etc).
+> *Mandatory accidental complexity*: The one we cannot do without (the network, the programming language, etc).
 
 > *Optional accidental complexity*: The complexity caused by the use of an inadequate framework, by the use of a different language between the domain concerns and the development one, etc.
 
