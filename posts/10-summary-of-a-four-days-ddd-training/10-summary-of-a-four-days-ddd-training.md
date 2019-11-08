@@ -24,7 +24,7 @@ My main expectations for the whole training was the following:
 
 - Validate what I previously learned;
 - Learn how to introduce the subject and onboard a tech-oriented team;
-- Here some real world stories about the usage of *DDD*;
+- Hear some real world stories about the usage of *DDD*;
 - Have a clear definition of two *DDD* terms that I often mixed up: *Strategic* and *Tactical* patterns;
 - Learn more about *DDD-lite*, is it a fraud?
 
@@ -110,7 +110,7 @@ This is a really diminishing description, I urge you to read [*Alberto Bradolini
 
 When using *DDD* at the enterprise scale, you need to set up inter-teams and inter-contexts strategies.
 
-This is where the *Strategic Patterns* play they part.
+This is where the *Strategic Patterns* play their part.
 
 > *Strategic Patterns*: Communication patterns used to organize the exchanges between contexts.
 
@@ -146,7 +146,7 @@ Here is a quick description of the building blocks described in *Eric Evans*' [*
 - *Aggregate*: Special kind of *Entity*, has an identity and a lifetime. Can be composed of *Value Objects* and *Entities*, but not of other *aggregates*;
   - Responsible for the domain logic for a single *aggregate*, every action on the aggregate or the elements inside it must go through him;
   - Cannot directly communicate with other *aggregates*, those communications must go through a *service*;
-  - Example: A person can be represented as an object with attributes and identify with his social security number. Actions on this person's tooth must go through the *aggregate* representing him, not directly on the tooth;
+  - Example: A person can be represented as an object with attributes and identified with his social security number. Actions on this person's tooth must go through the *aggregate* representing him, not directly on the tooth;
 - *Entity*: An object with an identity unique inside the aggregate;
   - Example: The front-left wheel in a car;
 - *Service*: Has no lifetime nor data. Used to synchronize aggregates;
