@@ -10,12 +10,12 @@ Ce sont ces idées qui me poussent à me former et appliquer des approches telle
 
 ## Résumé technique
 
-- Connaissance approfondie du framework Vue.js: utilisation quotidienne depuis 2016 et formateur depuis 2019;
-- Bonne maîtrise des technologies Front-End de base: HTML, CSS et JavaScript jusqu'aux spécifications ES2018, pratiquées quotidiennement depuis 2016;
-- Maîtrise correcte du Java et de l'écosystème Spring : utilisation professionnelle depuis 2018
-- Grand intérêt pour les pratiques de Software Craftsmanship : nombreuses lectures, mises en pratique et présentations sur le sujet;
-- Grand intérêt pour la mouvance DevOps ainsi que pour les concepts et technologies gravitants autour (Git et GitOps, CI/CD, conteneurisation, orchestration, etc);
-- Connaissances basiques mais grand intérêt pour le Go: formation de deux jours en 2019 et projets personnels dans ce langage.
+- Connaissance approfondie du framework **Vue.js**: utilisation quotidienne depuis 2016 et formateur depuis 2019;
+- Bonne maîtrise des technologies Front-End de base: **HTML, CSS et JavaScript jusqu'aux spécifications ES2018**, pratiquées quotidiennement depuis 2016;
+- Maîtrise correcte du **Java** et de l'écosystème **Spring** : utilisation professionnelle depuis 2018
+- Grand intérêt pour les pratiques de **Software Craftsmanship** : formation et mise en pratique des outils du **Domain Driven Design**, nombreuses lectures, mises en pratique et présentations sur le sujet;
+- Grand intérêt pour la mouvance **DevOps** ainsi que pour les concepts et technologies gravitants autour (Git et GitOps, CI/CD, conteneurisation, orchestration, etc);
+- Connaissances basiques mais grand intérêt pour le **Go**: formation de deux jours en 2019 et projets personnels dans ce langage.
 
 ## Expériences et acquis
 
@@ -72,3 +72,5 @@ Il s'agit pour moi, d'une part, d'une étape importante dans ma veille technolog
 D'autre part, cela me permet aussi d'expérimenter sur certains sujets que je ne maitrise pas, ou encore de faire un rapide retour sur des expériences diverses, afin d'en garder une trace.
 
 C'est notamment dans ce cadre que j'ai rédigé [un article sur le professionnalisme](https://medium.com/@t.ferro184/am-i-really-unprofessional-c36272c73f07) après avoir le "The Clean Coder : A Code of Conduct for Professional Programmers" par Robert C. Martin.
+
+Dernièrement, j'ai suivi une formation de quatre jours sur le **Domain Driven Design**, à la suite de laquelle j'ai [rédigé un article](https://medium.com/@t.ferro184/summary-of-a-four-days-ddd-training-74103a6d99a1) résumant les concepts vus et appliquées durant cette session.
