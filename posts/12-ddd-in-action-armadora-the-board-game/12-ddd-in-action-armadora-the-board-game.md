@@ -14,13 +14,13 @@ Anyway, let me introduce you to the game that I am building!
 
 ## Game's rules
 
-![Game in progress](https://github.com/ThomasFerro/readmes/blob/master/posts/12-ddd-in-action-armadora-the-board-game/game_in_progress.png)
+![Game in progress](https://github.com/ThomasFerro/readmes/blob/master/posts/12-ddd-in-action-armadora-the-board-game/game_in_progress.jpg)
 
 Here are the rules, based on the guide. The wording is important since it is already the Ubiquitous Language. No need to work with domain experts to build it in our case. Note that I will be only implementing the basic rules, not the advanced ones.
 
 Armadora is a game where every **player** will try to get their hands on the most **gold** possible.
 
-![Board](https://github.com/ThomasFerro/readmes/blob/master/posts/12-ddd-in-action-armadora-the-board-game/board.png)
+![Board](https://github.com/ThomasFerro/readmes/blob/master/posts/12-ddd-in-action-armadora-the-board-game/board.jpg)
 
 The **game board** is a 8x5 grid with two types of **cell**: the **lands** where the players will be able to put their **warriors** (more on that later) and the **gold stacks** with various quantity or gold.
 
@@ -50,7 +50,7 @@ Once a player passed his turn, he cannot play anymore for the rest of the game.
 
 The game ends once every player has passed they turn. Every armies' strength is revealed and the gold of each territory is given to the player with the greatest army.
 
-![End of a game](https://github.com/ThomasFerro/readmes/blob/master/posts/12-ddd-in-action-armadora-the-board-game/end_of_a_game.png)
+![End of a game](https://github.com/ThomasFerro/readmes/blob/master/posts/12-ddd-in-action-armadora-the-board-game/end_of_a_game.jpg)
 
 In case of a tie, the players will compare their piles of gold, from highest to lowest.
 
