@@ -12,7 +12,7 @@ Let me try to explain why I am concerned about the future of the framework if it
 
 I remember more than four years ago, when I joined my first company and heard about Vue for the first time. Having tried only Angular.js in my years of study, I was anxious, not knowing if I could learn a completely new approach relatively fast.
 
-Fast forward a few days later, I felt like I was up and running! The entry cost coming from Angular.js appeared quite cheep,. Everything seemed easier, more obvious.
+Fast forward a few days later, I felt like I was up and running! The entry cost coming from Angular.js appeared quite cheap. Everything seemed easier, more obvious.
 
 When I say up and running, I did not mean that I knew every part of the framework and the ecosystem. I knew enough, however, to start contributing on the company's projects. The learning phase never stopped, as you may imagine. Every new feature to implement or bug to fix was an opportunity to teach myself good components and applications building practices.
 
