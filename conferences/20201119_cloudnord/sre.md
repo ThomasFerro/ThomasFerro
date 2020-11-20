@@ -16,7 +16,7 @@ Perte de confiance:
 - Utilisateurs (stabilité du produit)
 - Équipes (tensions, blame, etc)
 - Vendredi, pas de déploiement
-- Cercle vicieu
+- Cercle vicieux
 
 Dynamique négative pour les fix:
 - Attente de la déclaration d'un bug des utilisateurs
@@ -44,7 +44,7 @@ En pratique, ça donne quoi ?
 - On n'est pas dans une partie de Cluedo, cherche un coupable ne sert à rien
 
 Concepts techniques du SRE:
-- Objectif de fiabilité (SLO), exprimé sur tout ce qui a de la valeur dans l'appli (en % de fiabilité sur un lapse de temps)
+- Objectif de fiabilité (SLO), exprimé sur tout ce qui a de la valeur dans l'appli (en % de fiabilité sur un laps de temps)
 - Service Level Agreements, des SLO contractuels
 - Error budget: 100% - SLO décompté à partir du moment où une erreur apparaît jusqu'à ce que les utilisateurs ont de nouveau accès aux services
 

@@ -27,14 +27,14 @@ Comment suivre l'état de santé d'une appli serverless ?
 Comment régulation le nombre de requêtes entrantes ?
 - Throttling
 - Limite de concurrence
-- Service d'ingestion de requête (passage en asyncrone)
+- Service d'ingestion de requête (passage en asynchrone)
 
 Comment assurer la résilience de l'application ?
-- Service d'ingestion de requête (passage en asyncrone)
+- Service d'ingestion de requête (passage en asynchrone)
 - Dead Letter Queue pour gérer les erreurs
 
 Comment sont optimisés les perfs de l'application ?
-- Gérer le ration cout / perf avec la config
+- Gérer le ration coût / perf avec la config
 
 Comment les accès aux API sont contrôlés ?
 - Authentification, nécessaire mais pas suffisant !

@@ -8,7 +8,7 @@ Plongée sous-marine // appli résilientes
 
 ## Préparer sa plongée
 
-Plannifier ce qui peut mal se passer. Technique des "what if":
+Planifier ce qui peut mal se passer. Technique des "what if":
 
 1. Identifier les dangers potentiel
 2. Évaluer les risques
@@ -25,7 +25,7 @@ Définir la disponibilité qu'on vise (SLA) en fonction du besoin.
 
 ## On se jette à l'eau !
 
-Est-ce qu'on est capable de faire un petit schéam avec tous les flux, toutes les dépendances, etc ?
+Est-ce qu'on est capable de faire un petit schéma avec tous les flux, toutes les dépendances, etc ?
 
 Quand quelque chose se passe mal, qu'est-ce qu'on fait ?
 

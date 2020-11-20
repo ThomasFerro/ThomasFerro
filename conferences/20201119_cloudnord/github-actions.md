@@ -26,9 +26,9 @@ Ajout d'un peu de shell.... rend le tout difficilement modifiable par les dev !
 
 Extraction du pipeline dans une lib ! Réplicable, mais toujours pas opti... Par exemple, lorsque 10 projets utilisent le pipeline.. Besoin d'isolation !
 
-Pipelines executées dans des conteneurs Docker 
+Pipelines exécutées dans des conteneurs Docker 
 
-Github Actions: souahite faciliter les choses, les rendre plus accessibles
+Github Actions: souhaite faciliter les choses, les rendre plus accessibles
 
 ## Github actions
 
@@ -36,7 +36,7 @@ Arrivé assez tardivement dans le milieu. Permet de récupérer la connaissance 
 
 Comment ça marche ?
 
-Chaque pipeline démarre dans une VM fraiche.
+Chaque pipeline démarre dans une VM fraîche.
 
 Chaque step s'execute dans la VM (possibilité de l'exé dans une image Docker).
 
@@ -49,10 +49,10 @@ Description du fichier:
   - Matrices pour lancer des jobs sur plusieurs éléments 
   - `steps`: Description d'une étape
     - `run`: le shell à exécuter
-    - Démarrable dans un container docker
+    - Exécutable dans un container docker
     - Possibilité de déléguer une étape à une Github Action
 
-> Github Action: Action unitaire avec des entrées / sorties conçu pour intérragir facilement avec git et l'API Github
+> Github Action: Action unitaire avec des entrées / sorties conçu pour interagir facilement avec git et l'API Github
 
 Exemple: checkout, super-linter, ..., et plein de setup
 

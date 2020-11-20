@@ -24,6 +24,6 @@ Limitations:
 - Pas mal de choses expérimentales
 - Besoin de maturité
 
-Ecosystème d'outils pour se faciliter la vie pour l'installation de clusters.
+Écosystème d'outils pour se faciliter la vie pour l'installation de clusters.
 
 ==> k3s: Utile pour dédramatiser Kubernetes et se faire la main
