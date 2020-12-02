@@ -36,7 +36,7 @@ A *Vuex store* is composed of these different parts:
 
 The state is represented as a stack of mutations that you can replay or just analyze in-depth:
 
-![Mutations stack shown in Vue Devtools](https://github.com/ThomasFerro/readmes/blob/post/vue-3%2338/posts/17-replace-vuex-with-composition-api/mutations.png)
+![Mutations stack shown in Vue Devtools](https://github.com/ThomasFerro/readmes/blob/master/posts/17-replace-vuex-with-composition-api/mutations.png?raw=true)
 
 This is just a theoretical introduction and it is not enough to get started. Please read through [the documentation for more information](https://vuex.vuejs.org/).
 
