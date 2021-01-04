@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emancipate yourself from Vuex with Vue 3's Composition API - Thomas Ferro</title>
+    <link rel="stylesheet" href="/assets/styles/font.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/main.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/title.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/list.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/blockquote.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/figure.css" type="text/css">
+</head>
+<body>
+    <header><a href="/">Thomas Ferro</a></header>
+    <main><h1>Emancipate yourself from Vuex with Vue 3&rsquo;s Composition API</h1>
+
+<blockquote>
+<p>Is there still room for Vuex with Vue 3?</p>
+</blockquote>
+
+<p>Before wrapping up this series about <em>Vue 3</em> and the <em>Composition API</em>, I wanted to show you one last use-case that I found interesting. If you did not already, please take a look at <a href="https://dev.to/thomasferro/vue-3-s-composition-api-and-the-segregation-of-concerns-1k5c">my introduction of the Composition API</a> so that you won&rsquo;t get lost with the syntax.</p>
+
+<p>This article is especially for the people who have already learned <em>Vuex</em> and tend to use it in every place where they manage data.</p>
+
+<p>If you do not fit into this category or do not even know what <em>Vuex</em> is, here is a concise introduction.</p>
+
+<h2>One store to rule them all</h2>
+
+<p>According to the documentation, <em>Vuex</em> is &ldquo;a state management pattern + library for Vue.js applications&rdquo;. Think of it as the place to store and manipulate reactive data outside of a component before we had the Reactivity and the Composition APIs.</p>
+
+<p>I cannot recommend you enough to watch <strong>Vue Mastery</strong>&rsquo;s introduction on the subject, available on <a href="https://vuex.vuejs.org/">the library&rsquo;s home page</a>.</p>
+
+<p>To sum up greatly, you can use this library to externalize reactive data shared by components far from each other in the components tree.</p>
+
+<p>Instead of communicating by sending props down the tree and emitting events up, you can use a <em>Vuex store</em>. This way, your components are always up to date when one of them modify the store&rsquo;s state.</p>
+
+<p>These two schemas are from <a href="https://www.vuemastery.com/courses/mastering-vuex/intro-to-vuex/"><em>Vue Mastery</em>&rsquo;s introduction</a>. First you can see a complex component tree with a lot of events and props to manage in order to make the two leaf components communicate:</p>
+
+<p><img src="https://firebasestorage.googleapis.com/v0/b/vue-mastery.appspot.com/o/flamelink%2Fmedia%2F1578371882429_1.png?alt=media&amp;token=2c411c9f-d5cf-4404-8009-00b73e24a622" alt="Complex component tree communication - Vue Mastery" /></p>
+
+<p>Here we use a Vuex store to simplify this communication:</p>
+
+<p><img src="https://firebasestorage.googleapis.com/v0/b/vue-mastery.appspot.com/o/flamelink%2Fmedia%2F1578371889694_2.png?alt=media&amp;token=f9cc01f0-4644-4867-92ad-17ccd6cc7a6e" alt="Components communication with Vuex - Vue Mastery" /></p>
+
+<p>A <em>Vuex store</em> is composed of these different parts:</p>
+
+<ul>
+<li><a href="https://vuex.vuejs.org/guide/state.html"><code>state</code></a>: The place where your reactive data lives. <strong>You cannot directly modify the state</strong>. To do so, you have to <em>commit</em> <strong>mutations</strong>;</li>
+<li><a href="https://vuex.vuejs.org/guide/getters.html"><code>getters</code></a>: Just like computed properties, this is a way to expose the state in a different shape. They are usually used to avoid rewriting logic inside every component consuming the store;</li>
+<li><a href="https://vuex.vuejs.org/guide/mutations.html"><code>mutations</code></a>: The only way to modify the state is by <strong>committing mutations</strong>. They should be synchronous and the smallest possible;</li>
+<li><a href="https://vuex.vuejs.org/guide/actions.html"><code>actions</code></a>: For asynchronous treatments or for logic that implies modifying many elements in the state, we can <strong>dispatch actions</strong>;</li>
+<li><a href="https://vuex.vuejs.org/guide/modules.html"><code>modules</code></a>: In order to split the state, we can create stand-alone stores, the modules.</li>
+</ul>
+
+<p>The state is represented as a stack of mutations that you can replay or just analyze in-depth:</p>
+
+<p><img src="https://github.com/ThomasFerro/readmes/blob/master/posts/17-replace-vuex-with-composition-api/mutations.png?raw=true" alt="Mutations stack shown in Vue Devtools" /></p>
+
+<p>This is just a theoretical introduction and it is not enough to get started. Please read through <a href="https://vuex.vuejs.org/">the documentation for more information</a>.</p>
+
+<h3>My issue with Vuex</h3>
+
+<p><em>Vuex</em> is just like any technology, it comes with a cost. First, the price of learning the library. It usually takes me half a day to only introduce the subject in the trainings that I gave. You can add a couple of days of practicing before actually tame the beast.</p>
+
+<p>Secondly, when using <em>Vuex</em>, you tend to lost the concept of <strong>data responsibility</strong>. No component is responsible for the data when everyone can modify the store&rsquo;s state. This way of thinking usually leads to application that are hard to maintain and debug. It is hard to keep track of whom did the mutations and why, even when using great tools such as <a href="https://github.com/vuejs/vue-devtools">Vue Devtools</a>.</p>
+
+<p>When I say &ldquo;usually&rdquo;, I generalize on purpose. They are applications where <em>Vuex</em> is used pragmatically and where the code base is still easily maintainable and scalable. However, I tended to overuse <em>Vuex</em> when I first learned it and I think that I am not the only one.</p>
+
+<p>My take is to almost never use <em>Vuex</em>, especially when a simple &ldquo;Parent-Child&rdquo; communication pattern is enough. You will save yourself from long hours of debugging and headaches.</p>
+
+<p>Where to use it, then? There are use-cases where it comes handy. Or should I say &ldquo;where it used to came handy&rdquo;, now that we have the Composition API. Let me explain with an example, a sample application with user information displayed and editable.</p>
+
+<h2>User data management using Vuex</h2>
+
+<p>I will not be covering Vuex installation in this article, please follow <a href="https://vuex.vuejs.org/installation.html">the documentation</a> if you need to.</p>
+
+<p>Let us first take a look at what we will be building. We are not creating an entire Web application, it is way out of this article&rsquo;s scope. We will, however, build common pieces that you will certainly encounter if you have not already. Those two pieces are the following:</p>
+
+<ol>
+<li>A <code>Header</code> component, displaying the user nickname and his profile picture;</li>
+<li>A <code>UserSettings</code> component where the data will be editable.</li>
+</ol>
+
+<p>Here, using <em>Vuex</em> is overkill. Just imagine that the rest of the application is ignored, that we have a complex component tree and <em>Vue Router</em> installed.</p>
+
+<p>The actual API call will be externalize in the <code>api.js</code> file. Just know that it returns a <code>Promise</code>, like <code>fetch</code> or <code>axios</code> would have.</p>
+
+<p>Let us start our implementation with the store&rsquo;s user module:</p>
+
+<pre><code class="language-js">import { loadUserInfo, saveNewUserInfo } from './api';
+
+const AVAILABLE_STATUS = {
+    LOADING: 'LOADING',
+    UPDATING: 'UPDATING',
+    ERROR: 'ERROR',
+};
+
+export const user = {
+    namespaced: true,
+    state() {
+        return {
+            nickname: '',
+            pictureUrl: '',
+            status: '',
+        };
+    },
+    getters: {
+        isLoading: state =&gt; state.status === AVAILABLE_STATUS.LOADING,
+        isUpdating: state =&gt; state.status === AVAILABLE_STATUS.UPDATING,
+        errorOccurred: state =&gt; state.status === AVAILABLE_STATUS.ERROR,
+    },
+    mutations: {
+        changeStatus(state, newStatus) {
+            state.status = newStatus;
+        },
+        changeNickname(state, newNickname) {
+            state.nickname = newNickname;
+        },
+        changePicture(state, newPicture) {
+            state.pictureUrl = newPicture;
+        },
+    },
+    actions: {
+        // Called by the &quot;App&quot; component to ensure that the initial data are loaded
+        load({ commit }) {
+            commit('changeStatus', AVAILABLE_STATUS.LOADING);
+            loadUserInfo()
+                .then(({ nickname, pictureUrl }) =&gt; {
+                    commit('changeNickname', nickname)
+                    commit('changePicture', pictureUrl)
+                    commit('changeStatus', '');
+                })
+                .catch(() =&gt; {
+                    commit('changeStatus', AVAILABLE_STATUS.ERROR);
+                })
+        },
+        update({ commit }, newUser) {
+            commit('changeStatus', AVAILABLE_STATUS.UPDATING);
+            saveNewUserInfo(newUser)
+                .then(({ nickname, pictureUrl }) =&gt; {
+                    commit('changeNickname', nickname)
+                    commit('changePicture', pictureUrl)
+                    commit('changeStatus', '');
+                })
+                .catch(() =&gt; {
+                    commit('changeStatus', AVAILABLE_STATUS.ERROR);
+                })
+        },
+    },
+};
+</code></pre>
+
+<p>Here we have two important things. First, the state to consume with the nickname and the picture&rsquo;s url. We also have the possibility to modify the profile thanks to the <code>update</code> <em>action</em>.</p>
+
+<p>A loading status is also managed in the store, which allows components to display the appropriate message to the user.</p>
+
+<p>The header component can now consume the store&rsquo;s data:</p>
+
+<pre><code class="language-html">&lt;template&gt;
+    &lt;header&gt;
+        &lt;template v-if=&quot;isLoading&quot;&gt;
+            User information are loading
+        &lt;/template&gt;
+        &lt;template v-else-if=&quot;isUpdating&quot;&gt;
+            User information are updating
+        &lt;/template&gt;
+        &lt;template v-else-if=&quot;errorOccurred&quot;&gt;
+            Unable to manage user information
+        &lt;/template&gt;
+        &lt;template v-else&gt;
+            Welcome {{ nickname }}
+            &lt;img :src=&quot;pictureUrl&quot; alt=&quot;User picture&quot; class=&quot;user-picture&quot;&gt;
+        &lt;/template&gt;
+    &lt;/header&gt;
+&lt;/template&gt;
+
+&lt;script&gt;
+import { mapState, mapGetters } from 'vuex';
+
+export default {
+    name: 'app-header',
+    computed: {
+        ...mapState({
+            nickname: state =&gt; state.user.nickname,
+            pictureUrl: state =&gt; state.user.pictureUrl,
+        }),
+        ...mapGetters({
+            isLoading: 'user/isLoading',
+            isUpdating: 'user/isUpdating',
+            errorOccurred: 'user/errorOccurred',
+        }),
+    },
+}
+&lt;/script&gt;
+
+&lt;style &gt;
+.user-picture {
+    height: 40px;
+    width: 40px;
+    border-radius: 50%;
+}
+&lt;/style&gt;
+</code></pre>
+
+<p>Last, the <code>UserSettings</code> component will do just the same and will use the action when the user validate his modifications:</p>
+
+<pre><code class="language-html">&lt;template&gt;
+    &lt;form @submit.prevent=&quot;updateUser&quot;&gt;
+        &lt;label&gt;
+            Nickname
+            &lt;input type=&quot;text&quot; v-model=&quot;newNickname&quot;&gt;
+        &lt;/label&gt;
+        &lt;label&gt;
+            Picture url
+            &lt;input type=&quot;text&quot; v-model=&quot;newPicture&quot;&gt;
+        &lt;/label&gt;
+        &lt;input type=&quot;submit&quot; value=&quot;Validate changes&quot; :disabled=&quot;formDisabled&quot;&gt;
+        &lt;p v-if=&quot;errorOccurred&quot;&gt;An error has occurred while managing user information...&lt;/p&gt;
+    &lt;/form&gt;
+&lt;/template&gt;
+
+&lt;script&gt;
+import { mapState, mapGetters } from 'vuex';
+
+export default {
+    name: 'user-settings',
+    data() {
+        return {
+            newNickname: '',
+            newPicture: '',
+        };
+    },
+    computed: {
+        ...mapState({
+            nickname: state =&gt; state.user.nickname,
+            pictureUrl: state =&gt; state.user.pictureUrl,
+        }),
+        ...mapGetters({
+            isLoading: 'user/isLoading',
+            isUpdating: 'user/isUpdating',
+            errorOccurred: 'user/errorOccurred',
+        }),
+        formDisabled() {
+            return this.isLoading || this.isUpdating
+        },
+    },
+    watch: {
+        nickname: {
+            handler() {
+                this.newNickname = this.nickname;
+            },
+            immediate: true,
+        },
+        pictureUrl: {
+            handler() {
+                this.newPicture = this.pictureUrl;
+            },
+            immediate: true,
+        },
+    },
+    methods: {
+        updateUser() {
+            if (!this.formDisabled) {
+                this.$store.dispatch('user/update', {
+                    nickname: this.newNickname,
+                    pictureUrl: this.newPicture,
+                })
+            }
+        },
+    },
+};
+&lt;/script&gt;
+</code></pre>
+
+<p>One can say that this solution works and he would be right. However, I see several drawbacks:</p>
+
+<ul>
+<li>We need to make a component responsible for the initial data load;</li>
+<li>A complete and complex library is needed for what seems to be a simple task.</li>
+</ul>
+
+<p>Will the results be any better with the Composition API? Let us see!</p>
+
+<h2>The same result with the Composition API?</h2>
+
+<p>Refactoring this application to use the Composition API should not take too long.</p>
+
+<p>First, we will create the ES module that will replace our store. How can we make a module that share the data between every consumers? We can use the <strong>singleton</strong> design pattern:</p>
+
+<pre><code class="language-js">import { ref, computed } from &quot;vue&quot;;
+
+import { loadUserInfo, saveNewUserInfo } from './api';
+
+const AVAILABLE_STATUS = {
+    LOADING: 'LOADING',
+    UPDATING: 'UPDATING',
+    ERROR: 'ERROR',
+};
+
+// These data will only be created once and thus be shared by the consumers
+const nickname = ref('');
+const pictureUrl = ref('');
+const status = ref('');
+
+// Computed properties based on the status
+const isLoading = computed(() =&gt; status.value === AVAILABLE_STATUS.LOADING);
+const isUpdating = computed(() =&gt; status.value === AVAILABLE_STATUS.UPDATING);
+const errorOccurred = computed(() =&gt; status.value === AVAILABLE_STATUS.ERROR);
+
+// No need for mutations anymore, we can simply create JS methods
+const apiCallReturnedWithNewUserInformation = ({ nickname: loadedNickname, pictureUrl: loadedPictureUrl }) =&gt; {
+    nickname.value = loadedNickname;
+    pictureUrl.value = loadedPictureUrl;
+    status.value = '';
+}
+const load = () =&gt; {
+    status.value = AVAILABLE_STATUS.LOADING;
+    loadUserInfo()
+        .then(apiCallReturnedWithNewUserInformation)
+        .catch(() =&gt; {
+            status.value = AVAILABLE_STATUS.ERROR;
+        });
+};
+
+const update = (newUser) =&gt; {
+    status.value = AVAILABLE_STATUS.UPDATING;
+    saveNewUserInfo(newUser)
+        .then(apiCallReturnedWithNewUserInformation)
+        .catch(() =&gt; {
+            status.value = AVAILABLE_STATUS.ERROR;
+        })
+};
+
+// Fetch the user info when the module will be used for the first time
+load();
+
+// Export a method that returns every needed piece of information
+export const useUserManager = () =&gt; ({
+    load,
+    update,
+    nickname,
+    pictureUrl,
+    status,
+    isLoading,
+    isUpdating,
+    errorOccurred,
+});
+</code></pre>
+
+<p>Next, we need to change the way we consume data in our components:</p>
+
+<pre><code class="language-html">&lt;template&gt;
+    &lt;header&gt;
+        &lt;template v-if=&quot;isLoading&quot;&gt;
+            User information are loading
+        &lt;/template&gt;
+        &lt;template v-else-if=&quot;isUpdating&quot;&gt;
+            User information are updating
+        &lt;/template&gt;
+        &lt;template v-else-if=&quot;errorOccurred&quot;&gt;
+            Unable to manage user information
+        &lt;/template&gt;
+        &lt;template v-else&gt;
+            Welcome {{ nickname }}
+            &lt;img :src=&quot;pictureUrl&quot; alt=&quot;User picture&quot; class=&quot;user-picture&quot;&gt;
+        &lt;/template&gt;
+    &lt;/header&gt;
+&lt;/template&gt;
+
+&lt;script&gt;
+import { useUserManager } from './user/userManager';
+
+export default {
+    name: 'app-header',
+    setup() {
+        const userManager = useUserManager();
+        return {
+            pictureUrl: userManager.pictureUrl,
+            nickname: userManager.nickname,
+            isLoading: userManager.isLoading,
+            isUpdating: userManager.isUpdating,
+            errorOccurred: userManager.errorOccurred,
+        }
+    },
+}
+&lt;/script&gt;
+
+&lt;style &gt;
+.user-picture {
+    height: 40px;
+    width: 40px;
+    border-radius: 50%;
+}
+&lt;/style&gt;
+</code></pre>
+
+<pre><code class="language-html">&lt;template&gt;
+    &lt;form @submit.prevent=&quot;updateUser&quot;&gt;
+        &lt;label&gt;
+            Nickname
+            &lt;input type=&quot;text&quot; v-model=&quot;newNickname&quot;&gt;
+        &lt;/label&gt;
+        &lt;label&gt;
+            Picture url
+            &lt;input type=&quot;text&quot; v-model=&quot;newPicture&quot;&gt;
+        &lt;/label&gt;
+        &lt;input type=&quot;submit&quot; value=&quot;Validate changes&quot; :disabled=&quot;formDisabled&quot;&gt;
+        &lt;p v-if=&quot;errorOccurred&quot;&gt;An error has occurred while managing user information...&lt;/p&gt;
+    &lt;/form&gt;
+&lt;/template&gt;
+
+&lt;script&gt;
+import { ref, computed, watchEffect } from 'vue';
+import { useUserManager } from './userManager';
+export default {
+    name: 'user-settings',
+    setup() {
+        const newNickname = ref('');
+        const newPicture = ref('');
+
+        const userManager = useUserManager();
+        const formDisabled = computed(() =&gt; {
+            return userManager.isLoading.value || userManager.isUpdating.value;
+        });
+
+        watchEffect(() =&gt; newNickname.value = userManager.nickname.value);
+        watchEffect(() =&gt; newPicture.value = userManager.pictureUrl.value);
+
+        const updateUser = () =&gt; {
+            if (!formDisabled.value) {
+                userManager.update({
+                    nickname: newNickname.value,
+                    pictureUrl: newPicture.value,
+                });
+            }
+        }
+
+        return {
+            newNickname,
+            newPicture,
+            pictureUrl: userManager.pictureUrl,
+            nickname: userManager.nickname,
+            isLoading: userManager.isLoading,
+            isUpdating: userManager.isUpdating,
+            errorOccurred: userManager.errorOccurred,
+            formDisabled,
+            updateUser,
+        }
+    },
+};
+&lt;/script&gt;
+</code></pre>
+
+<p>Finally, you can delete the store&rsquo;s files and remove the dependency from your application!</p>
+
+<p>We now have the same result for the end-user, but our application does not depend on a library other than Vue.</p>
+
+<p>I have to say, however, that this is not a silver bullet. Your application will still be hard to debug and maintain if you put everything into one big module. The Composition API is a tool, a great one, but still nothing more. It can do much more harm than good if used non-pragmatically.</p>
+
+<hr />
+
+<p>What we built can be seen as - and is, actually - a simple <a href="https://vuejs.org/v2/guide/state-management.html#Simple-State-Management-from-Scratch"><strong>State Management Pattern</strong></a>. We did leverage the clarity and modularity provided by the Composition API to create what I think is the most developer and user-friendly <em>State Management Pattern</em>.</p>
+
+<h2>Something ends&hellip;</h2>
+
+<p>What do you think about this State Management Pattern? Will you consider using it in your application?</p>
+
+<p>It was the first time that I write so much about a single subject. I hope that you have learned as much as I did along the way :)</p>
+
+<p>Please send me feedback about the series and your experiences, I will be glad to read from you all!</p>
+</main>
+</body>
+</html>

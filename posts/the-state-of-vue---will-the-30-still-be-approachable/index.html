@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The state of Vue - Will the 3.0 still be approachable? - Thomas Ferro</title>
+    <link rel="stylesheet" href="/assets/styles/font.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/main.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/title.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/list.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/blockquote.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/figure.css" type="text/css">
+</head>
+<body>
+    <header><a href="/">Thomas Ferro</a></header>
+    <main><h1>The state of Vue - Will the 3.0 still be approachable?</h1>
+
+<blockquote>
+<p>Easy to get started with, but how hard to master?</p>
+</blockquote>
+
+<p>It should not be long before we get our hands on Vue.js next major release! I cannot wait - and actually have not waited - to try the new features to build faster and cleaner applications thanks to the great work of Evan You and the community.</p>
+
+<p>However, the pasts months had me wonder about the global reception of those new features, especially the Composition API. I sure am excited and ready to use it, but is everyone on the same page?</p>
+
+<p>Let me try to explain why I am concerned about the future of the framework if it continues down that path.</p>
+
+<h2>Approachable&hellip; at first</h2>
+
+<p>I remember more than four years ago, when I joined my first company and heard about Vue for the first time. Having tried only Angular.js in my years of study, I was anxious, not knowing if I could learn a completely new approach relatively fast.</p>
+
+<p>Fast forward a few days later, I felt like I was up and running! The entry cost coming from Angular.js appeared quite cheap. Everything seemed easier, more obvious.</p>
+
+<p>When I say up and running, I did not mean that I knew every part of the framework and the ecosystem. I knew enough, however, to start contributing on the company&rsquo;s projects. The learning phase never stopped, as you may imagine. Every new feature to implement or bug to fix was an opportunity to teach myself good components and applications building practices.</p>
+
+<h2>Digration about training</h2>
+
+<p>For now more than a year, I have been lucky enough to train people into Vue.js. The main target are developers already having a solid experience in Javascript so that we can focus on the framework. My goal is to provide them with the keys to build professional applications using this specific tool.</p>
+
+<p>I was confident enough in my technical skills and knowledge, but not in my teaching skills. How to build a compelling and complete training? One that supports students up to a sufficient level of mastery?</p>
+
+<p>With the help of a soft-skills coach and the support of my technical director, a first draft of the training was ready to be tested on the field.</p>
+
+<p>Not long after, I was teaching Vue.js based on that first draft and I had a feeling that something was off. I gave the maximum amount of keys - knowledge about what the framework can do and how - and it seemed to connect with them. However, when asked to build a feature with no technical details, like in our day to day conversation with product owners and business experts, few where the ones who could provide a working solution.</p>
+
+<p>What is it that makes Vue.js so hard to condensed in three days? <em>Condensed</em>&hellip; It may be it. Instead of <em>condensing</em> every feature into the training and risking to overwhelm people with non-essential information, why not <em>distill</em> those information through real world examples?</p>
+
+<p>That is what I tried to apply in the latest version of the training, and it seems to work for most people. Of course, everyone has is own way of learning and there is no silver bullet, but I am convinced that it is a better way of teaching.</p>
+
+<p>This training experience and the discovery of another framework, Svelte, had me wonder about my issues with Vue.js. It is certainly approachable at first, but what it is that confused me when learning Vue and seems to confuse those who want to get started?</p>
+
+<h2>A hundred ways to achieve the same goal</h2>
+
+<p>Vue.js provides different ways to define <em>props</em> that your component accepts. For instance, here are three valid ways to tell that your component can receive an array of students:</p>
+
+<pre><code class="language-js">// 1. The simpliest solution, without any check
+
+{
+  props: [ 'students' ],
+}
+
+// 2. Type checked props
+
+{
+  props: {
+    students: Array,
+  },
+};
+
+// 3. Type checked props with fallback
+
+{
+  props: {
+    students: {
+      type: Array,
+      // Another itch, the default value needs to be
+      // inside a method for arrays and objects
+      default() { return []; },
+    },
+  },
+};
+</code></pre>
+
+<p>You have the same behaviour with the definition of <em>computed properties</em> and <em>watchers</em>.</p>
+
+<p>This expandable API allows you to write less code if you do not need the extra options, which is nice&hellip; when you already know all the syntaxes.</p>
+
+<p>When learning Vue, however, it tends to add a significant amount to the already big cognitive load.</p>
+
+<p>As you may imagine, this is not going to get any better with the addition of the whole new Composition API. Newcomers will now be exposed with a whole new way or writing components logic <strong>plus</strong> the classical Options API.</p>
+
+<p>I know that there is no silver bullet, that we have to choose between providing shorthands for developers or force everyone to use the expanded, more verbose version. I still think, however, that the following questions deserve to be asked:</p>
+
+<p>Do we really <em>need</em> all of those options? Where do the convenience end and the pragmatism begin?</p>
+
+<h2>Reactivity and references caveats in the hands on the developer</h2>
+
+<p>You may have seen that the Vue instance&rsquo;s <code>data</code> is often described as a function returning the actual data. Do you know why? According to <a href="https://vuejs.org/v2/guide/components.html#data-Must-Be-a-Function">the documentation</a>, you must do that so &ldquo;[&hellip;]each instance can maintain an independent copy of the returned data object&rdquo;.</p>
+
+<p>It sure sounds to me like a Javascript issue invading the framework&rsquo;s API, but I can get it. The thing that bugs me is that you <em>can</em> describe the data directly as an object to if you won&rsquo;t reuse the component.</p>
+
+<p>Two syntaxes because of a references issue, bummer.</p>
+
+<p>Going into the reactivity field, have you ever wonder why linters and compilers tend to get mad at you for not adding a <code>key</code> attribute when using the <code>v-for</code> directive? It is <a href="https://vuejs.org/v2/style-guide/#Keyed-v-for-essential">&ldquo;to maintain predictable behavior, such as object constancy in animations.&rdquo;</a> Again, I cannot help but think that this is not something we should manage as users.</p>
+
+<p>I get that it could add complexity into the framework. Yet, I found it better to have technical complexities managed in the framework and leave the applications as clear as possible from them.</p>
+
+<p>The same goes with the <code>deep</code> option in watchers, which allows you to not only watch the changes in the reference to an array or an object but also the changes in the array&rsquo;s elements or the object&rsquo;s properties. This last one, however, can be discussed since it can be useful to only listen to changes in the variable&rsquo;s reference.</p>
+
+<p>Shouldn&rsquo;t those concerns be managed by the framework by default? Are we not using a framework to ignore those concerns in the first place? Should the developer know about implementation details in order to use a framework or library?</p>
+
+<h2>Share your thoughts and opinion!</h2>
+
+<p>I know that I am just exposing points without bringing anything to the table. The goal is only to provide a context that we can use to build a constructive debate. I will dive deeper into my thoughts in the last article of this series.</p>
+
+<p>What are your thoughts on the subject?</p>
+
+<p>How did you first learn the basics of Vue.js?</p>
+
+<p>Have you felt overwhelmed at first by the API&rsquo;s options?</p>
+
+<p>Are you concerned about the addition of more APIs?</p>
+
+<p>I will be glad to hear from you about it. On the next articles, we will actually discuss about Vue 3&rsquo;s Composition API and try to make the most out of it!</p>
+</main>
+</body>
+</html>

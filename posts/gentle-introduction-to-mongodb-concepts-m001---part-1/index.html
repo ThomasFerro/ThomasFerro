@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gentle introduction to MongoDB concepts (M001 - Part 1) - Thomas Ferro</title>
+    <link rel="stylesheet" href="/assets/styles/font.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/main.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/title.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/list.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/blockquote.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/figure.css" type="text/css">
+</head>
+<body>
+    <header><a href="/">Thomas Ferro</a></header>
+    <main><h1>Gentle introduction to MongoDB concepts (M001 - Part 1)</h1>
+
+<blockquote>
+<p>Learn the intention before the implementation</p>
+</blockquote>
+
+<p>I could have started this series by writing CRUD (<em>Create / Read / Update / Delete</em>) operations and explaining MongoDB base concepts on top of working example. However, I think that the best way to introduce a concept to some people is by allowing them to try along.</p>
+
+<p>With that in mind, we will see what MongoDB actually is and how to get started with your own database for free!</p>
+
+<h2>Wherever there is data&hellip;</h2>
+
+<p>First of all, what is a database?</p>
+
+<p>It is a structured way to store and access data. You usually need one when you need to persist any of your applications&rsquo; data.</p>
+
+<p>Take a note taking application for instance, where you can write and manage notes. Imagine the difference of provided value between those two versions:</p>
+
+<ul>
+<li>One that loose all of your notes when refreshing the page;</li>
+<li>Another one who allows you to retrieve your notes every time you start it.</li>
+</ul>
+
+<p>This is a trivial example, but data is actually everywhere. I never had a single professional experience where no data was involved, have you?</p>
+
+<p>There are two main families of databases usually used: the <em>SQL</em> and the <em>NoSQL</em> databases.</p>
+
+<p><em>SQL</em> actually refers to the <strong>Structured Querying Language</strong>, the language used to manipulate the data inside of a relational database management system (<em>RDBMS</em>). It also gave its name to the databases family of the same name.</p>
+
+<p>Here are the main differences between the two kinds of databases.</p>
+
+<blockquote>
+<p><strong>SQL databases</strong> (OracleDb, PostreSQL, SQLite, &hellip;): Where data is stored in strongly constrained and related tables.</p>
+
+<p><strong>NoSQL databases</strong>: Variety of database types that do not use the approach of related data tables.</p>
+</blockquote>
+
+<p>In the <em>NoSQL</em> family, you can find:</p>
+
+<blockquote>
+<p><strong>Key–value stores</strong> (Redis for instance): Where data is stored as key-value pairs with the keys only appearing once in the database. Think of it as a <code>map</code> in your favorite programming language.</p>
+
+<p><strong>Document store</strong> (MongoDB): Where data is stored as documents in collections. We will of course discuss that kind of NoSQL database in length in this series.</p>
+
+<p><strong>Graph</strong> (Noe4j): Used for data with strong relationships. Think LinkedIn&rsquo;s relations web for instance.</p>
+</blockquote>
+
+<p>These are the main types of NoSQL databases that you will encounter, but <a href="https://en.wikipedia.org/wiki/NoSQL#Types_and_examples">not the only ones</a>.</p>
+
+<p>So, MongoDB is a NoSQL document database, but what does it really means? Let us find out!</p>
+
+<h2>MongoDB basics</h2>
+
+<p>MongoDB is classified as a <em>document database</em> because of how it stores data. Every entry in your database will take the form of <strong>documents</strong>, representing your data as <strong>field-value pairs</strong>. Picture yourself a <em>JSON object</em> and you basically see a <em>MongoDB document</em>.</p>
+
+<p>Want to stock user information? Here is a valid document:</p>
+
+<pre><code class="language-json">{
+  &quot;firstName&quot;: &quot;Thomas&quot;,
+  &quot;lastName&quot;: &quot;Ferro&quot;
+}
+</code></pre>
+
+<blockquote>
+<p><strong>Field</strong>: A unique identifier for the document&rsquo;s attribute.</p>
+</blockquote>
+
+<p>Again, this is strongly similar to any JSON object where you cannot have the same attribute twice or more.</p>
+
+<p>Are we supposed to throw all of our documents in a single spot and hope for the best when trying to retrieve valuable information? It is not the case since MongoDB offers a first level of data arrangement, the <em>collections</em>.</p>
+
+<blockquote>
+<p><strong>Collection</strong>: Where the documents are organized and stored.</p>
+</blockquote>
+
+<p>The second level of arrangement are the <em>databases</em>. One database can have multiple collections and you will be able to search for your data by providing the couple <em>database</em> / <em>collection</em>.</p>
+
+<p>For instance, the previous example can be stored in a <code>users</code> collection inside the database named after your project.</p>
+
+<h2>Different ways to host your database</h2>
+
+<p>It is time to get yourself an up and running MongoDB instance! We will see different way to have your own database, starting with solutions to run it locally.</p>
+
+<p>I won&rsquo;t get into much details on this part, but I think that it can be useful to know how to get a local MongoDB instance for development or test purposes. You will have to main solution to do so.</p>
+
+<p>This is not the way that I would recommend, but it is the most basic one. You can start a MongoDB Community Server by downloading it <a href="https://www.mongodb.com/try/download/community">here</a>.</p>
+
+<p>If you are already familiar with Docker or trying to get better at it, I would recommend that you run a <a href="https://hub.docker.com/_/mongo/"><code>mongo</code> container</a>.</p>
+
+<p>Both those solutions require you to manage the administration part, even though they can work out of the box for basic usage. This can suit you for starting and getting to know MongoDB. However, when starting a real project, I would recommend using a managed database.</p>
+
+<p>Managed databases are MongoDB (or other solutions) instances provided by a third party. As a developer, I found this solution to be the perfect compromise. It allows me to focus on my field of expertise while resting assured that my data will not be corrupted or deleted because of my lack of operational skills.</p>
+
+<p>In this case, we often talk about <strong>database as a service</strong> such as <em>MongoDB Atlas</em> or the solution provided on <em>Amazon Web Services</em>,  <em>Microsoft Azure</em> or other. Those providers usually take responsibility for deploying, running and maintaining your MongoDB infrastructure with different pricing strategies.</p>
+
+<p>In this series we will be using <em>MongoDB Atlas</em> since they are the ones providing the course and they offer a free plan for us to try their services.</p>
+
+<h2>MongoDB Atlas in theory</h2>
+
+<p>On top of the MongoDB concepts, Atlas add a few principles.</p>
+
+<blockquote>
+<p><strong>Clusters</strong>: Groups of servers that store data.</p>
+</blockquote>
+
+<p>You can picture a cluster as Atlas&rsquo;s magic sauce that brings you all of the services related to your database.</p>
+
+<p>In order to provide high availability and resiliency, Atlas use the concept of <em>replica sets</em>.</p>
+
+<blockquote>
+<p><strong>Replica set</strong>: Connected MongoDB instances that store the same data.</p>
+</blockquote>
+
+<p>Replica sets are useful to provide a resilient infrastructure by replicate the data in all instances. If one instance goes down, the others can still provide access to your data.</p>
+
+<blockquote>
+<p><strong>Instance</strong>: Single machine running MongoDB in the cloud.</p>
+</blockquote>
+
+<p>Atlas also provide tools to monitor your databases, but we will not cover them here.</p>
+
+<p>With that theoretical section out of the way, it is time to play with Atlas!</p>
+
+<h2>Start using MongoDB Atlas</h2>
+
+<p>The first thing to do is to create a cluster through Atlas&rsquo; web application and store some data in it.</p>
+
+<p>You can sign in with the authentication method of your choice <a href="https://account.mongodb.com/account/login?nds=true">here</a>, then <em>create an organization</em> which will contain your databases.</p>
+
+<p>Inside this new organization, create a new project that will serve as a sandbox. You can build a free cluster in the <em>cloud provider</em> of your choice. It should not matter for this example, the Atlas services are supposed work the same for any cloud provider.</p>
+
+<p>You now can serve yourself a cup of coffee or tea while the cluster is being provisioned for you ☕️</p>
+
+<p>Congratulations, you have your first MongoDB cluster in the Cloud!</p>
+
+<p>We now want to access the cluster. Two things to configure to do so:</p>
+
+<ul>
+<li>Grand access to our IP address (more information on security features <a href="https://docs.atlas.mongodb.com/setup-cluster-security/#add-ip-addresses-to-the-whitelist">here</a>)
+
+<ul>
+<li>You can allow access from anywhere for now, but <strong>you really should define who can access your database before going into production.</strong></li>
+</ul></li>
+<li>Create a <em>database user</em> that will have the rights to perform actions on the data.</li>
+</ul>
+
+<p>To start manipulating data, I suggest you load the sample dataset into your sandbox by clicking the ellipsis on your cluster then &ldquo;Load sample dataset&rdquo;.</p>
+
+<h3>Visualize data</h3>
+
+<p>Click the &ldquo;collections&rdquo; button in the cluster to see the data stored in it. You should be able to navigate through the databases, collections and documents imported from the sample dataset.</p>
+
+<p>If you want to access and manipulate your data through a shell, you first need to click the &ldquo;connect&rdquo; button in your cluster then &ldquo;Connect with the <code>mongo</code> shell&rdquo;. Here you will find every needed information to download the tool if needed.</p>
+
+<p>Enter the provided connection command line in your terminal, replacing <code>dbname</code> and <code>dbuser</code> with your database&rsquo;s information: <code>mongo &quot;mongodb+srv://sandbox.xsnoi.mongodb.net/&lt;dbname&gt;&quot; --username &lt;dbuser&gt;</code>.</p>
+
+<p>You should be prompted to enter your user&rsquo;s password. Once done, you are connected to your cluster!</p>
+
+<p>Try to use the <code>db</code> command to see the name of your database 😁</p>
+
+<hr />
+
+<p>You now have your own sandbox, it is time to learn how to actually manipulate data.</p>
+
+<p>Thanks for reading through, next time we will dive deep into documents creation and manipulation!</p>
+</main>
+</body>
+</html>

@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome.. To Deno Park! - Thomas Ferro</title>
+    <link rel="stylesheet" href="/assets/styles/font.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/main.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/title.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/list.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/blockquote.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/figure.css" type="text/css">
+</head>
+<body>
+    <header><a href="/">Thomas Ferro</a></header>
+    <main><h1>Welcome.. To Deno Park!</h1>
+
+<blockquote>
+<p>Tired of hacking Node applications? Introducing Deno</p>
+</blockquote>
+
+<h2>What? Why? How?</h2>
+
+<p>My rule of thumb for effective technology watch is the following: don&rsquo;t loose your time on shiny new things.</p>
+
+<p>Wait for the hype to pass and see if the opinions are still mostly positive after that, once the emotions and feelings are out of the way. With <a href="https://deno.land/v1">the release of the 1.0</a>, I think that it is time to really dig into Deno!</p>
+
+<p>First thing first, what problem does Deno solve? Mostly the same as Node.js. From building CLI&rsquo;s and HTTP API to creating developers&rsquo; tools.</p>
+
+<p>I have been working with Node.js for more than two years now, and it was far from a cliché love story between us.</p>
+
+<p>There are aspects of this runtime that I like. It is especially a great tool for front-end developers wanting to do some back-end work.</p>
+
+<p>The heavy setup needed to test your code or use a superset of Javascript, I&rsquo;m not so found of.</p>
+
+<p>You can guess that my curiosity was piqued when I first eared of Deno, and here are the reasons why I was interested in learning it:</p>
+
+<h3>Dependencies hell</h3>
+
+<p>Deno dependencies management is quite different from Node.js. It works with a cache on your computer where the third party modules will be stored.</p>
+
+<p>Using a dependency does not require you to install it with a command, but just reference it in an import. Just like importing a module from another local file:</p>
+
+<pre><code class="language-ts">import { serve } from &quot;https://deno.land/std/http/server.ts&quot;;
+</code></pre>
+
+<p>Like the <a href="https://deno.land/manual/linking_to_external_code#it-seems-unwieldy-to-import-urls-everywhere">documentation explains it</a> and how we will see in the next sections, importing from urls can seem messy and inconsistency prone. Some patterns are already used to manage your dependencies&rsquo; locations in a unique place.</p>
+
+<p>Assuring the consistency of the dependencies between your development environment and the production is also a huge deal. To do so, you can <a href="https://deno.land/manual/linking_to_external_code/integrity_checking">generate a lock file</a> that will be used to validate the cache integrity.  Another good practice is to reference a specific version number:</p>
+
+<pre><code class="language-ts">import { copy } from &quot;https://deno.land/std@0.50.0/fs/copy.ts&quot;;
+</code></pre>
+
+<p>Instead of:</p>
+
+<pre><code class="language-ts">import { copy } from &quot;https://deno.land/std/fs/copy.ts&quot;;
+</code></pre>
+
+<h3>Secure by design</h3>
+
+<p>Have you ever wonder what could happen if one of the dependencies of your Node.js application&rsquo;s dependencies did something malicious? Sending personal data to who knows where? Reading through your files? I never heard such stories, but it worth considering, <strong>better safe than sorry</strong>!</p>
+
+<p>Deno is secure by default, which means that your application is not allowed to do things like reading through your file system without explicit authorization when running the code. Here is what happens if you try to run an application without the requested permissions:</p>
+
+<pre><code class="language-bash">deno run index.ts --http
+Serving the HTTP API on port 8000
+error: Uncaught PermissionDenied: network access to &quot;0.0.0.0:8000&quot;, run again with the --allow-net flag
+    at unwrapResponse ($deno$/ops/dispatch_json.ts:43:11)
+    at Object.sendSync ($deno$/ops/dispatch_json.ts:72:10)
+    at Object.listen ($deno$/ops/net.ts:51:10)
+    at Object.listen ($deno$/net.ts:155:22)
+</code></pre>
+
+<h3>Types and tests</h3>
+
+<p>I have never been a Typescript aficionados, but I admit that it helps you build a safer code base, thanks to the statically typed transcompiler. If you are not allergic either: rejoice! <a href="https://deno.land/manual/getting_started/typescript">Deno supports Typescript out of the box.</a></p>
+
+<p>I am, however, a test aficionados and I admit that it helps you build a safer code base, thanks to the safeguard that it provides. If you are not allergic either: rejoice! <a href="https://deno.land/manual/testing">Deno supports testing out of the box.</a> You will need to write your test using <code>Deno.test</code> and if needed using <a href="https://deno.land/manual/testing/assertions">the assertions library</a>.</p>
+
+<pre><code class="language-ts">// Spoiler alert!!
+Deno.test(&quot;Initial park with two dinosaurs&quot;, () =&gt; {
+  const initialPark = initiatePark();
+
+  assertEquals(initialPark?.dinosaurs?.length, 2);
+});
+</code></pre>
+
+<h2>Building a Jurassic park manager</h2>
+
+<blockquote>
+<p><a href="https://www.youtube.com/watch?v=-w-58hQ9dLk">Welcome&hellip; to Deno Park!</a></p>
+</blockquote>
+
+<p>I am sure that there are a lot of articles and tutorials about the making of &ldquo;Hello World&rdquo;s and &ldquo;TODO list&rdquo;s out there. This is fine if you want to get started, but it is not enough for me to make my own opinion about a tool. You can also find basic examples in <a href="https://deno.land/manual/examples">the documentation</a>.</p>
+
+<p>What I want to build to try Deno is something that feels more complete. A project that may not be useful on his own, but who is fun to build and who can show me the strengths and limitations behind the hype.</p>
+
+<p>This project is <strong>Deno Park</strong>, defenitly not a rip off. You will be able to manage your dinosaurs: breeding, feeding and euthanize them if necesarry. Those actions will be available via a CLI and a HTTP API.</p>
+
+<p>Building this project will highlight several common themes of &ldquo;real world applications&rdquo;, such as writing well tested domain code and building APIs on top of it. The only important part missing is a database connection.</p>
+
+<p>You can find <a href="https://github.com/ThomasFerro/deno-park">the final product on Github</a> if you are interested.</p>
+
+<h3>Setting up</h3>
+
+<p>According to a survey that I just made up, 92% of all side projects follow this pattern:</p>
+
+<ol>
+<li>Write down ideas about the project;</li>
+<li>Spend two days setting it up;</li>
+<li>Get bored / find something similar on Github / realize that there is little to no added value;</li>
+<li>Archive and never touch it again.</li>
+</ol>
+
+<p>I don&rsquo;t say that Deno will make you finish project. It won&rsquo;t. But it comes with enough tooling and compatibility options to reduce the setup. <em>Hooray</em>, right?</p>
+
+<p>So, what do we need to start a Deno project? A <code>package.json</code> file with the dependencies and a description? Dozens of tools, plugins and configuration files? Not exactly. Not at all.</p>
+
+<p>First, we will download and install Deno. I will let you do that following the <a href="https://deno.land/manual/getting_started/installation"><em>getting started</em> guide</a>.</p>
+
+<p>Then create a new folder&hellip; And we are ready! (We previously saw that a lock file can be used for dependency management, but let us keep this simple for now)</p>
+
+<p>One thing that I really enjoyed while trying Deno is the tooling that comes out of the box. Remember when you needed to spend half a day on tools configuration? Now you only need to spend some time on the documentation!</p>
+
+<p>You want to run all of your tests? <code>deno test .</code></p>
+
+<p>Run the project locally? <code>deno run index.ts</code> (if no permission is needed)</p>
+
+<p>Format your code base? <code>deno fmt</code></p>
+
+<p>Bundle your application and his dependencies into a single <code>js</code> file? <code>deno bundle index.ts deno-park.js</code></p>
+
+<p>And you can count on the community to create tools for more advanced need like <a href="https://deno.land/x/denon">hot reloading</a>.</p>
+
+<p><em>Ok! Great!</em> I hear you say, <em>Little to no setup! But what about actual code??</em> Actual code? Silly you, I will show you something far more valuable than code: tests!</p>
+
+<h3>Red, green, refactor: a mantra for a healthy domain code</h3>
+
+<p>This is not an article about <em>Test Driven Development</em> - or <em>TDD</em> - so I won&rsquo;t be long on the subject. <a href="https://www.oreilly.com/library/view/test-driven-development/0321146530/">Just know that it is a set of principles and practices that helps you build better software</a>.</p>
+
+<p>The main principle is to write the application starting with a failing test, then a naive implementation, and finally do the necessary refactoring while keeping the tests suites passing.</p>
+
+<p>Following TDD principles with Deno feels as smooth and good <a href="https://medium.com/@t.ferro184/tdd-in-action-debouncer-in-go-b0f7d7d75931">as it does with Go</a>. Thanks to the tooling provided out of the box, you can write the test with no additional library to install and setup.</p>
+
+<p>I started this project by listing the features that I wanted:</p>
+
+<ul>
+<li>Being able to create a new park with two dinosaurs;</li>
+<li>Being able to breed two dinosaurs, with the child being added to the park;</li>
+<li>The dinosaurs loose &ldquo;hunger points&rdquo; over time, until starvation;</li>
+<li>The manager can feed and euthanize dinosaurs.</li>
+</ul>
+
+<p>What is the shortest feature to implement here? The initial park!</p>
+
+<pre><code class="language-ts">Deno.test(&quot;Initial park with two dinosaurs&quot;, () =&gt; {
+  const initialPark = initiatePark();
+
+  assertEquals(initialPark?.dinosaurs?.length, 2);
+});
+</code></pre>
+
+<p>To answer this request, the minimal solution is to create the <code>initiatePark</code> method that returns a park with two dinosaurs. No need to implement anything else for now, the dinosaurs list can be an array of anything.</p>
+
+<p>Then the second test comes in, with the need to breed dinosaurs:</p>
+
+<pre><code class="language-ts">Deno.test(&quot;Breed two dinosaurs&quot;, () =&gt; {
+  let park = initiatePark();
+
+  park = park.breed(0, 1, &quot;Billy&quot;);
+
+  assertEquals(park?.dinosaurs?.length, 3);
+  assertEquals(park?.dinosaurs[2]?.name, &quot;Billy&quot;);
+});
+</code></pre>
+
+<p>We add a new <code>breed</code> method on the park, taking the dinosaurs to breed and the name of the child.</p>
+
+<p>I choose to return the modified park instead of mutating the initial one. This is an implementation detail, but I like immutability.</p>
+
+<p>Now comes the first edge case, what if the user tries to breed dinosaurs who do not exist? Let us create a test for that:</p>
+
+<pre><code class="language-ts">Deno.test(&quot;Cannot breed with a dinosaur not in the park&quot;, () =&gt; {
+  const park = initiatePark();
+
+  assertThrows(
+    () =&gt; {
+      park.breed(0, 12, &quot;Billy&quot;);
+    },
+    CannotBreedDinosaursNotInPark,
+  );
+
+  assertThrows(
+    () =&gt; {
+      park.breed(12, 1, &quot;Billy&quot;);
+    },
+    CannotBreedDinosaursNotInPark,
+  );
+});
+</code></pre>
+
+<p>And so on until we covered every feature!</p>
+
+<h3>Building a CLI and a HTTP API on top of the domain</h3>
+
+<p>We have seen that Deno can help us create solid domain code with its tools, but what about infrastructural code?</p>
+
+<p>First, we can build a CLI on top of the domain code, managing the interactions with the user over the terminal.</p>
+
+<p>To do so, Deno provides what I found to be an aesthetic and practical way to read through the standard input asynchronously:</p>
+
+<pre><code class="language-ts">import { readLines } from &quot;https://deno.land/std@0.60.0/io/bufio.ts&quot;;
+for await (const nextLine of readLines(Deno.stdin)) {
+  // ...
+}
+</code></pre>
+
+<p>You can display information to the user just like with Node.js, using the <code>console</code> object:</p>
+
+<pre><code class="language-ts">console.clear();
+console.log(&quot;Welcome... to Deno Park!&quot;);
+</code></pre>
+
+<p>It also provides more tools in his standard libraries, but I let you read through them on your own!</p>
+
+<p>Using many of those tools, you can build your own CLI! <a href="https://github.com/ThomasFerro/deno-park/blob/master/cli/index.ts">The one that I built</a> may be a little bit complex to grasp at first so let&rsquo;s break down the most important parts.</p>
+
+<p>The CLI presents to the user the information needed to manage the Park, such as the commands that can be used and the current state of the dinosaurs. This is done in the <code>updateDisplay</code> methods, called after every update:</p>
+
+<pre><code class="language-ts">const updateDisplay = (park: Park) =&gt; {
+  console.clear();
+  console.log(&quot;Welcome... to Deno Park!&quot;);
+  if (park.gameOver) {
+    console.log(&quot;You have no dinosaur left, game over!&quot;);
+    return;
+  }
+  displayDinosaurs(park);
+  displayCommands(commands);
+};
+</code></pre>
+
+<blockquote>
+<p>Welcome&hellip; to Deno Park!
+[0] 🙂  - 5
+[1] 🙂  - 5
+Type B <first dino> <second dino> <name> to breed (eg: &ldquo;B 0 1 Sam&rdquo; to breed the first two dinosaurs and name the new one &ldquo;Sam&rdquo;)
+Type E <dino> to euthanize a dinosaur (eg: &ldquo;E 1&rdquo; to euthanize the dinosaur at index 1)
+Type F <dino> to feed a dinosaur (eg: &ldquo;F 2&rdquo; to feed the dinosaur at index 2)</p>
+</blockquote>
+
+<p>We also need to set an interval, passing the time on a regular basis and updating the display when it is done:</p>
+
+<pre><code class="language-ts">  setInterval(() =&gt; {
+    park = park.passTime();
+    updateDisplay(park);
+  }, 6000);
+</code></pre>
+
+<p>The user can now enter his command, as shown in the examples. His input will be managed in a loop, checking if the command exists and executing it if so:</p>
+
+<pre><code class="language-ts">  for await (const command of readLines(Deno.stdin)) {
+    let error = null;
+    const commandHandler = getCommandHandler(commands, command);
+    if (commandHandler) {
+      try {
+        park = commandHandler(park, command);
+      } catch (e) {
+        error = e.message;
+      }
+    }
+    updateDisplay(park);
+    if (error) {
+      console.log(&quot;Error:&quot;, error);
+    }
+  }
+</code></pre>
+
+<p>Regarding HTTP API, I first tried to create one only with the standard libraries. You have to manage very low-level concerns and heavy lifting, but you can make it work.</p>
+
+<p>A framework managing those complex and repetitive concerns can be used. In fact, you are probably using one when doing API with Node.js as well. I personally often use <a href="https://expressjs.com/"><em>Express</em></a> for these use cases.</p>
+
+<p>The Deno ecosystem may be young, but we already have plenty of framework to use for building HTTP API. I tried <a href="https://deno.land/x/oak"><em>oak</em></a> since it has an API very similar to <em>Express</em> and a clear documentation. I am not going to explain how the framework works, you can refer to the documentation for that. However, here are the endpoints that I implemented:</p>
+
+<pre><code class="language-ts">export const initiateHttp = async (initialPark: Park) =&gt; {
+  let park = initialPark;
+  setInterval(() =&gt; {
+    park = park.passTime();
+  }, 6000);
+  const router = new Router();
+
+  router
+    .get(&quot;/&quot;, (context) =&gt; {
+      context.response.body = {
+        ...park,
+        gameOver: park.gameOver,
+      };
+    })
+    .post(&quot;/feed&quot;, (context) =&gt; {
+      try {
+        park = park.feed(Number(helpers.getQuery(context)?.dinosaur));
+      } catch (e) {
+        context.response.status = 500;
+        context.response.body = e.message;
+      }
+    })
+    .post(&quot;/euthanize&quot;, (context) =&gt; {
+      try {
+        park = park.euthanize(Number(helpers.getQuery(context)?.dinosaur));
+      } catch (e) {
+        context.response.status = 500;
+        context.response.body = e.message;
+      }
+    })
+    .post(&quot;/breed&quot;, (context) =&gt; {
+      const dinosaurs = helpers.getQuery(context)?.dinosaurs.split(&quot;,&quot;).map(
+        Number,
+      );
+      const childName = helpers.getQuery(context)?.name;
+      try {
+        park = park.breed(dinosaurs[0], dinosaurs[1], childName);
+      } catch (e) {
+        context.response.status = 500;
+        context.response.body = e.message;
+      }
+    });
+
+  const app = new Application();
+  app.use(router.routes());
+  app.use(router.allowedMethods());
+
+  const port = 8000;
+  console.log(&quot;Serving the HTTP API on port&quot;, port);
+  await app.listen({ port: 8000 });
+};
+</code></pre>
+
+<p>As you may have noticed, the domain code is only used as an external source, which provide clear boundaries between concerns.</p>
+
+<h3>To production, and beyond!</h3>
+
+<p>Writing software is cool. Delivering it to the users is even cooler, if not mandatory!</p>
+
+<p>Setting up a basic <em>continuous integration</em> workflow using <em>Github Actions</em> can help us get automatic feedback on every commit. It will ensure that our project is in a stable state and that we can put it in production - more - safely.</p>
+
+<p>There seems to be no official Docker image, so I used the following: <a href="https://github.com/hayd/deno-docker">hayd/alpine-deno</a>.</p>
+
+<p>The workflow is two steps long, running the <code>deno test command</code> after checking out the code:</p>
+
+<pre><code class="language-yaml">name: CI
+
+on: push
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    container:
+      image: hayd/alpine-deno:1.1.3
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Run the tests
+      run: deno test .
+</code></pre>
+
+<p>You can put your application in production using this Docker image too, I recommend that you take a look at <a href="https://blog.logrocket.com/how-to-deploy-deno-applications-to-production/">LogRocket&rsquo;s article</a> on the subject.</p>
+
+<h2>Wrapping up</h2>
+
+<p>I think you could tell, I really enjoyed trying Deno. All of what use to overwhelm me when doing Node.js projects is gone, and I can focus on what matters most: building application.</p>
+
+<p>I am confident enough in it to make it a candidate for future professional pieces of software when the opportunity will come.</p>
+
+<p>I am now eager to see if it will have the same popular success than Node.js, and to see if it keeps his promises with bigger, more complex projects in production!</p>
+</main>
+</body>
+</html>

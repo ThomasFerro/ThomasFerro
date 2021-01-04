@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Golog : My take on palindromes and Go logging - Thomas Ferro</title>
+    <link rel="stylesheet" href="/assets/styles/font.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/main.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/title.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/list.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/blockquote.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/figure.css" type="text/css">
+</head>
+<body>
+    <header><a href="/">Thomas Ferro</a></header>
+    <main><h1>Golog : My take on palindromes and Go logging</h1>
+
+<blockquote>
+<p>Logging enhanced, plus a quick integration with the ELK stack</p>
+</blockquote>
+
+<h2>Should I write logs?</h2>
+
+<p>Yes.</p>
+
+<p>Logging is a key part of debugging. How can we understand what went wrong in our application if we are in the dark?</p>
+
+<p>However, logging for the sake of logging is never enough. For the messages to be useful, they need to be contextualized. What is the level of the log? What data are attached to it?</p>
+
+<p>This way, we are able to quickly understand the root cause, which actions led to the observed behavior.</p>
+
+<p>Still need to be convinced ? Want a more in-depth presentation of the why and how ? Please take a look at <a href="https://medium.com/@edouard.cattez/the-art-of-talkative-application-489f03bd89f4">Edouard Cattez&rsquo;s awesome article on the subject</a>.</p>
+
+<h2>The standard way</h2>
+
+<p>The Go programming language offers a standard way of logging via the <a href="https://golang.org/pkg/log"><code>log</code> package</a>.</p>
+
+<p>I really like how this package <em>abstract the output</em>. It makes it so easy to start logging right away for any little project, without having to deal with the low level details. Nobody wants to deal with low level details anyway, right ? <em>Right ?</em></p>
+
+<p>On the other hand, I feel like too much is going on under the hood, especially with the call to <code>os.Exit(1)</code> or the <code>panic</code> with the <code>Fatal</code> and <code>Panic</code> methods. I also am not found of the fact that there is <em>no logging level nor metadata management</em> out of the box. It makes me very sad and grumpy.</p>
+
+<p>As I do not like to be sad and grumpy, and as I plain to start a <a href="https://medium.com/p/building-a-blogging-application-part-1-the-goals-b4a99847584">quite big project of my own</a>, I need a solution to the previously listed issues.</p>
+
+<h2>Building the new logger</h2>
+
+<p>Disclaimer : The point here is not to reinvent the wheel - even tho I will - but to play around with a real example. I also wanted to create a logger that suits <strong>my own needs</strong> for further projects.</p>
+
+<p><img src="https://github.com/ThomasFerro/readmes/blob/master/posts/9-golog-my-take-on-palindromes-and-go-logging/standards.png" alt="XKCD comics on the proliferation of standards" /></p>
+
+<blockquote>
+<p>Credits to XKCD for the comics, <a href="https://xkcd.com/license.html">link to the licence page</a></p>
+</blockquote>
+
+<p>Rest assure, I wont describe the whole process like I did in <a href="https://medium.com/p/tdd-in-action-debouncer-in-go-b0f7d7d75931">TDD in action : Debouncer in Go</a>.</p>
+
+<p>I did however built this logger following the TDD principles, to be sure that it worked the way I expected. &ldquo;It does not work if it is not tested&rdquo;, as a wise human being once said, I guess. But how did I expected it to work again ?</p>
+
+<p>Many loggers such as <a href="https://github.com/sirupsen/logrus">Sirupsen&rsquo;s <code>logrus</code></a> already tackle the issues of not having metadata nor levels of tracing.</p>
+
+<p>The API of <code>golog</code> is as simple as the <code>logrus</code> one. You have one method per level of log (<code>Debug</code>, <code>Info</code>, <code>Warn</code>, <code>Error</code> and <code>Fatal</code>) and an <em>entry</em> system for the metadata.</p>
+
+<p>To add metadata to a log, you can use (and chain) the <code>WithFields</code> method :</p>
+
+<pre><code class="language-golang">golog.WithFields(entries.Fields{
+	&quot;answer&quot;: 42,
+	&quot;title&quot;: &quot;The Hitchhiker's Guide to the Galaxy&quot;,
+}).WithFields(entries.Fields{
+	&quot;author&quot;: &quot;Douglas Adams&quot;,
+}).Debug(&quot;Unashamed reference dropping&quot;)
+``` 
+
+You can also log a message without any metadata :
+
+```golang
+golog.Debug(&quot;My message without context&quot;)
+</code></pre>
+
+<p>Unlike the standard API, <code>golog</code> <strong>does not panic nor exit the program when using the <code>Panic</code> or <code>Fatal</code> method</strong>. This is because I personally think that it breaks the Single Responsibility Principle and it make the behavior non-obvious. We may disagree on this point but for me it is an unwanted side-effect.</p>
+
+<p>Here is a sneak peak of the project&rsquo;s current structure.</p>
+
+<p>In order to <em>format</em> the logs, a <code>Formatter</code> must be provided with the following method <code>Format(fields entries.Fields, level string, message string) string</code>.</p>
+
+<p>The <em>fields</em> are simply a map with the metadata&rsquo;s names and values (<code>type Fields map[string]interface{}</code>).</p>
+
+<p>In the same package (<code>entries</code>) you will find the actual <code>Entry</code>, with a few methods :</p>
+
+<pre><code class="language-golang">type Entry interface {
+	Fields() Fields
+	WithFields(fields Fields) Entry
+	Debug(message string)
+	Info(message string)
+	Warn(message string)
+	Error(message string)
+	Fatal(message string)
+	WriteLog(level string, message string)
+}
+</code></pre>
+
+<p>The project also has a <code>loggers</code> package with the interface of a logger and a method to create a new one. As you may have understand already, a logger must have a <code>Formatter</code> and an <code>Output</code> :</p>
+
+<pre><code class="language-golang">func NewLogger(output io.Writer, formatter formatters.Formatter) Logger {
+	return GoLogger{
+		output,
+		formatter,
+	}
+}
+</code></pre>
+
+<p>With these concerns split, I was able to add the last feature : <strong>Being able to configure multiple loggers</strong>. This way, I can have the log written as key-value pair in the terminal and as JSON in a file.</p>
+
+<p>The method used to actually write a logging message iterates through all of the configured loggers. For each of them, it then write the message formatted using the provided formatter.</p>
+
+<pre><code class="language-golang">func (entry LogEntry) WriteLog(level string, message string) {
+	for _, logger := range GetLoggers() {
+		logger.Output().Write(
+			[]byte(
+				logger.Formatter().Format(entry.Fields(), level, message),
+			),
+		)
+	}
+}
+</code></pre>
+
+<p>Perfect, we know write the formatted message! The time is upon us when we will need no debugging tool, all we need to do is to read the logs! &hellip;But wait, how could we configure <em>golog</em> ?</p>
+
+<p>The next step was to provide a configuration system with the following rules :</p>
+
+<ol>
+<li>Have a default configuration with a log file and a console output;</li>
+<li>Being able to override the configuration with in-code configuration.</li>
+</ol>
+
+<p>This is where the <code>configurations</code> package steps in. It provides the following default configuration :</p>
+
+<pre><code class="language-golang">var defaultLoggers = []gologgers.Logger{
+	gologgers.NewLogger(os.Stdout, formatters.NewKvpFormatter()),
+	gologgers.NewLogger(outputs.NewSimpleLogFile(
+		&quot;log&quot;,
+	), formatters.NewKvpFormatter()),
+}
+</code></pre>
+
+<p>It also exposes a <code>SetLoggers</code> method, used to override the default configuration.</p>
+
+<p>When fetching the loggers to use, the default ones are used when no other are provided.</p>
+
+<h2>Going further : integration with centralized logs manager</h2>
+
+<p>Before we wrap it all up, let us integrate the new logging system with a centralized logs manager.</p>
+
+<p>The main focus for me was to decorrelate the application from the logs manager. <a href="https://www.elastic.co/products/beats/filebeat"><em>Filebeat</em> modules</a> allows me to do so by simply reading log files and sending the data wherever I want. For this example, I will be sending those data to an <a href="https://www.elastic.co/what-is/elk-stack"><em>ELK</em> stack</a>.</p>
+
+<p>In order to easily start an <em>ELK</em> stack, I have started a <em>Elastic Cloud</em> free trial.</p>
+
+<p>Then, I installed and configure <em>Filebeat</em> (v7.4.0) based on the <a href="https://www.elastic.co/products/beats/filebeat">documentation</a>.</p>
+
+<p>I decided to configure my logger to write the message as <em>JSON</em> object in a file, so the <em>Filebeat</em>&rsquo;s input configuration will look like this :</p>
+
+<pre><code class="language-yml">filebeat.inputs:
+- type: log
+  enabled: true
+  paths:
+    - /my/path/to/the/log/files/*.log
+  json.keys_under_root: true
+</code></pre>
+
+<p>One use case that I do not cover yet is the rotating logs. When log files start to get too big, one common practice is to keep the oldest messages in &ldquo;archive&rdquo; files. <em>Filebeat</em> is able to manage this use case, you can find the related documentation <a href="https://www.elastic.co/guide/en/beats/filebeat/current/filebeat-input-log.html#rotating-logs">here</a>.</p>
+
+<p>The <em>Filebeat</em> now watch the log files and send the data to <em>Elasticsearch</em>, and here is the result in <em>Kibana</em> :</p>
+
+<p><img src="https://github.com/ThomasFerro/readmes/blob/master/posts/9-golog-my-take-on-palindromes-and-go-logging/log-in-kibana.png" alt="Results in Kibana" /></p>
+
+<p>You may have noticed that I cheated a little. I needed to log the message as <em>JSON</em> object because I could not find any documentation about decoding key-value pair in the <em>Filebeat</em>. Feel free to let me know if you have any information about this subject.</p>
+
+<p>Anyway, no reference to the <em>ELK</em> nor <em>Filebeat</em> are in the Go code, mission accomplished!</p>
+
+<h2>Special thanks</h2>
+
+<p>I would like to thanks <a href="https://twitter.com/fabriceclaeys">Fabrice Claeys</a> and <a href="https://twitter.com/passionne42">Matthieu Fernandes</a>, two of my coworkers who helped me with their knowledge on logging et the Go language!</p>
+
+<p>Another special thanks to my friend and coworker <a href="https://twitter.com/ecattez">Edouard Cattez</a> for his precious inputs on logging, the <em>ELK</em> stack and <em>Filebeat</em>!</p>
+</main>
+</body>
+</html>

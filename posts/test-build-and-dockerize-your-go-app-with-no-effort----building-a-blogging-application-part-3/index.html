@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test, build and Dockerize your Go app with no effort ! - Building a blogging application part 3 - Thomas Ferro</title>
+    <link rel="stylesheet" href="/assets/styles/font.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/main.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/title.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/list.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/blockquote.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/figure.css" type="text/css">
+</head>
+<body>
+    <header><a href="/">Thomas Ferro</a></header>
+    <main><h1>Test, build and Dockerize your Go app with no effort ! - Building a blogging application part 3</h1>
+
+<blockquote>
+<p>My take on the application of the Docker&rsquo;s promises</p>
+</blockquote>
+
+<h2>Do we transvestite Docker ?</h2>
+
+<p>As you may notice through the reading of my articles, I am no Docker expert.</p>
+
+<p>On the other hand, the premises and the potential of containerization really speak to me. That is why I am willing to step out of my comfort zone to learn the principles and apply them as much as I can !</p>
+
+<p>The thing that really bugs me about Docker is its usage that seems to be generally done.</p>
+
+<p>I may be mistaking, but the really strength of Docker for me is in the ability to have the certainty to put in production the exact same environment that you developed on your machine.</p>
+
+<p>However, all I see is people (including myself) developing software locally, pushing the code in any repository and only then building a Docker image based on the latest sources.</p>
+
+<p>Docker seems to be relegated to an afterthought, as if we were building the image because of the containerization hype ?</p>
+
+<p>Am I wrong when I picture the following development workflow ?</p>
+
+<ol>
+<li>Do the needed changes in your IDE / text editor;</li>
+<li>Build a Docker image;</li>
+<li>Run the container, check if the work is done;</li>
+<li>Promote the image in any staging area for the domain experts to test it;</li>
+<li>Promote the image in the production environment.</li>
+</ol>
+
+<p>Only then will we be sure that the image used in production is working just like the one on our machine.</p>
+
+<p>With that in mind, let us talk a little bit about a very important matter when developing before diving into the main subject.</p>
+
+<h2>On feedback loop</h2>
+
+<p>This may be an opinion-based subject, but I do think that this is the most frustrating part when I first started using Docker.</p>
+
+<p><img src="https://github.com/ThomasFerro/readmes/blob/master/posts/7-go-dev-env-building-a-blogging-app-part-3/scrum_feedback_loop.jpg" alt="Scrum feedback loop" /></p>
+
+<p><img src="https://github.com/ThomasFerro/readmes/blob/master/posts/7-go-dev-env-building-a-blogging-app-part-3/kanban_feedback_loop.jpg" alt="Kanban feedback loop" /></p>
+
+<p>You may be familiar with the concept of feedback loop if you are working in an Agile team. The point is to have the shortest loop possible in order to now right away if you are heading in the right direction. You want to have regular feedback from your clients, remember that they are the reasons you are making the software in the first place !</p>
+
+<p>Now, in software development, you can see the feedback loop just as described above. The only change is in the actors.</p>
+
+<p>The first actor is the compiler. Take a software that does not compile, do you really need to wait for the end user to tell you that it does not work ? No, you have the information right away in your IDE / terminal. <strong>The compilation is the shortest feedback loop when developing.</strong></p>
+
+<p>Things start to get more interesting with the second actor : the tests. I am not making any distinction between the different kinds of tests, they complete each other so you have to run them all locally. <strong>Trust me, you want your tests to run as fast and as frequently as possible.</strong></p>
+
+<p>The third actor is you, the developer, the (wo)man in the chair. After testing and building your app, you should be checking by hand your work. <strong>This is most likely to be the longest feedback loop of the three since you have to wait for the software to compile and run.</strong></p>
+
+<p>To summarize, here are the three actors of the development feedback loop :</p>
+
+<p><img src="https://github.com/ThomasFerro/readmes/blob/master/posts/7-go-dev-env-building-a-blogging-app-part-3/development_feedback_loops.jpg" alt="Development feedback loops" /></p>
+
+<ol>
+<li>The compiler (if you got one) : If the software does not compile, <em>it does not work</em>;</li>
+<li>The tests (if you got some <strong>AND YOU SHOULD</strong>) : If the test suites does not pass, <em>it does not work</em>;</li>
+<li>The human (if indeed you are human) : If it does not work, <em>it does not work</em>;</li>
+</ol>
+
+<p>When talking about this software development feedback loop, how long is too long ?</p>
+
+<p>This is when things get even more opinionated. For me it is when I have the time to think of something else, when I lose focus. It is up to you to decide your own limit.</p>
+
+<p>Going back to the subject, how is this all related to me building a Go development environment ?</p>
+
+<p>When I first started to play with Go, I had this &ldquo;all by hand&rdquo; workflow :</p>
+
+<ol>
+<li>Change the code;</li>
+<li>Run the tests;</li>
+<li>Build;</li>
+<li>Run;</li>
+<li>When everything was ok, build a Docker image and run a container;</li>
+</ol>
+
+<p>Notice the similarities with the Docker usage described in the first part.</p>
+
+<p>It may seem like a standard development workflow, but boy if it is a long one when entering every command by hand. Especially when you are a Go and a Docker neophyte like me !</p>
+
+<p>Here is how I tried to reduce the loop, and greatly simplify my life while training my Go and Docker skills.</p>
+
+<h2>Introduction go-dev-env !</h2>
+
+<p>First thing first, we need to make sure that the initial needs are being addressed.</p>
+
+<p>The main issue is to reduce the time of the development feedback loop by providing a solution that runs frequently and requires minimum effort from the developer.</p>
+
+<p>This minimum effort could be just a button to press, but it will be even better if the process starts itself whenever a file has been modified.</p>
+
+<p>The second issue is to build an artifact that the developer could use instantly and deploy in any environment.</p>
+
+<p>Using the same terms as the ones that described the needs, here is a draft of a solution.</p>
+
+<p>I need a development environment that runs a <em>workflow</em> (this workflow will eventually build a Docker image) every time I receive a notification from a <em>trigger</em> (for instance, a &ldquo;file changed trigger&rdquo;).</p>
+
+<p>We can clearly see the two main parts of the project from this sentence :</p>
+
+<ul>
+<li>The workflow; and</li>
+<li>The trigger.</li>
+</ul>
+
+<h2>The workflow</h2>
+
+<p>A workflow is the description of everything that needs to happen for the artifact to be built.</p>
+
+<pre><code class="language-go">package workflows
+
+import &quot;github.com/go-dev-env/triggers&quot;
+
+// Workflow A workflow to be executed in the dev env
+type Workflow interface {
+	Execute()
+	Init()
+	Trigger() triggers.Trigger
+}
+</code></pre>
+
+<p>A workflow is composed of an <code>Execute</code> method that start the workflow and an <code>Init</code> method to initiate the process. We also have a reference to the workflow&rsquo;s trigger.</p>
+
+<p>For now, I only need to manage workflow that are based on a builder (here, a Dockerfile). To do so, I only needed to create a <code>BuildWorkflow</code>, that calls the builder every time a notification is sent from the trigger.</p>
+
+<p>The builder is also quite simple :</p>
+
+<pre><code class="language-go">package builders
+
+// ArtifactPath The path to the built artifact
+type ArtifactPath string
+
+// Builder An artifact builder
+type Builder interface {
+	Build(contextPath string) (ArtifactPath, error)
+}
+</code></pre>
+
+<p>It builds an artifact and can also throw an error in the process. The last part is to create a <code>DockerBuilder</code> for our specific case.</p>
+
+<p>This builder uses the standard library to create and execute a <code>docker build</code> command.</p>
+
+<h2>The trigger</h2>
+
+<p>Here is how I describe a <code>Trigger</code> :</p>
+
+<pre><code class="language-go">package triggers
+
+/// Trigger A standard trigger
+type Trigger interface {
+	Init() chan bool
+}
+</code></pre>
+
+<p>We simply have to call the <code>Init</code> method to initiate the trigger, and what we get in return is a new channel through which we will be notified.</p>
+
+<p>We need to know when to start the workflow. As I said earlier, we can achieve that with a simple button to press, ordering the workflow to run again.</p>
+
+<p>However, I found it more interesting to have a trigger based on the modification in the source code.</p>
+
+<p>This is one of the few places where I have allowed myself to rely on an external library :  <a href="https://github.com/fsnotify/fsnotify"><code>fsnotify</code>, a file system notifications library.</a>.</p>
+
+<p>With a little bit of setup, I was able to wrap this tool under the <code>FileWatcherTrigger</code>. I can now simply create a new trigger using the exposed method :</p>
+
+<pre><code class="language-go">// NewFileWatcherTrigger Create a new file watcher trigger
+func NewFileWatcherTrigger(path string) *FileWatcherTrigger {
+	log.Println(&quot;Creating a new file watcher trigger&quot;)
+
+	return &amp;FileWatcherTrigger{
+		path: path,
+	}
+}
+</code></pre>
+
+<p>Few noticeable details :</p>
+
+<ul>
+<li>This trigger uses a homemade debouncer to avoid duplicate notifications (<a href="https://medium.com/@t.ferro184/tdd-in-action-debouncer-in-go-b0f7d7d75931">here is an article describing the making of this debouncer</a>);</li>
+<li>It only notifies if a file or a folder is created, modified or deleted;</li>
+<li>It will watch everything inside the provided path, including files inside a newly created folder.</li>
+</ul>
+
+<p>Putting it all together, as done in the <code>main.go</code> file, we can now create our workflow :</p>
+
+<pre><code class="language-go">package main
+
+import (
+	&quot;os&quot;
+
+	&quot;github.com/go-dev-env/triggers&quot;
+	&quot;github.com/go-dev-env/workflows&quot;
+	&quot;github.com/go-dev-env/builders/docker&quot;
+)
+
+func getPath() string {
+	path := os.Getenv(&quot;SRC_PATH&quot;)
+	if path == &quot;&quot; {
+		path = &quot;/src&quot;
+	}
+	return path
+}
+
+func main() {
+	path := getPath()
+	
+	trigger := triggers.NewFileWatcherTrigger(path)
+	builder := docker.NewBuilder()
+
+	workflow := workflows.NewBuildWorkflow(path, trigger, builder)
+	workflow.Init()
+
+	for {}
+}
+</code></pre>
+
+<p>How does it all look from the developer perspective ?</p>
+
+<h2>Story time</h2>
+
+<p>Let us say I am a developer working on a blogging application in Go (which turns out to be true).</p>
+
+<p>The first thing I will need to do in order to use the development environment is to describe my workflow. Lucky for us, it is a pretty straightforward one :</p>
+
+<ol>
+<li>Run the test suites;</li>
+<li>Build the application;</li>
+<li>Run it.</li>
+</ol>
+
+<p>This workflow can be translated as this multistep Dockerfile :</p>
+
+<pre><code class="language-dockerfile"># Run the tests with a Go specific version
+FROM golang:1.12.6 as tests
+
+WORKDIR /src
+
+ADD . .
+
+RUN go test ./...
+
+
+# Build the artifact for the same Go version
+FROM golang:1.12.6 as builder
+
+WORKDIR /src
+
+ADD . .
+
+RUN CGO_ENABLED=0 GOOS=linux go build -o /dist/go-app
+
+# Run the software from an empty Docker image
+FROM scratch
+
+WORKDIR /root
+
+COPY --from=builder /dist .
+
+CMD [ &quot;./go-app&quot; ]
+</code></pre>
+
+<p>Setup time is over, I can now run the <code>go-dev-env</code> and start to work on the actual blogging application ! Every time I change something in my code base, the workflow will run and I will be noticed about every issue in the test suites or the compilation.</p>
+
+<p>The last thing I need to do is to run the Docker container based on the image generated by the development environment 😃.</p>
+
+<h2>Next steps</h2>
+
+<p>Obviously, this environment only provide a solution for my current needs.</p>
+
+<p>In order to go full circle, it would be nice if the development environment was himself inside a Docker container. I have tried to tackle this feature, but I was not able to build a Docker image inside a Docker container.</p>
+
+<p>The other and more important feature to be added is the possibility to make it work on bigger project, with more than one code bases. I will certainly work on this when building an application with many microservices.</p>
+
+<p>Do not hesitate to give me your opinion on the project, and even submit or work on an issue, it is <a href="https://github.com/ThomasFerro/go-dev-env">hosted on GitHub and is open source</a> !</p>
+
+<h2>In the next episode&hellip;</h2>
+
+<p>This article was part of my &ldquo;Building a blogging application&rdquo; series, where I describe the steps that seem important to me while working on this project.</p>
+
+<p>It was really fun to learn all those new things while making a development environment that tackles my actual issues. I do encourage you to build things really useful when learning a new language or a new technology. It feels way more rewarding than building a todo app for instance, and you are way less likely to give up if you need that piece of software.</p>
+
+<p>Stay tuned for more articles, the next ones are going to be focused on the implementation of the first features !</p>
+</main>
+</body>
+</html>

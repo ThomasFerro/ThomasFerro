@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A pragmatic approach to documents manipulation in MongoDB (M001 - Part 2) - Thomas Ferro</title>
+    <link rel="stylesheet" href="/assets/styles/font.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/main.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/title.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/list.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/blockquote.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/figure.css" type="text/css">
+</head>
+<body>
+    <header><a href="/">Thomas Ferro</a></header>
+    <main><h1>A pragmatic approach to documents manipulation in MongoDB (M001 - Part 2)</h1>
+
+<blockquote>
+<p>What do you value the most between a documentation exploring in-depth every aspect of a technology and a cheat sheet?</p>
+</blockquote>
+
+<p>Biased question, I know. These two tools have different reasons to exists. My point is to make you think about ways to learn the basics of a technology without the unnecessary details. This state of mind can be helpful to tell if this technology fits your needs before consuming too much time in it.</p>
+
+<p>The goal of this article is to provide you with the minimum knowledge required to get you as far as possible. The 20% knowledge that covers 80% of your daily use cases (totally made-up numbers, for the sake of the metaphor).</p>
+
+<p>As it is often the case with engineering, the more advanced concepts will be built upon those bases. Make sure you master them!</p>
+
+<h2>Manipulate the whole database</h2>
+
+<p>We <a href="https://dev.to/thomasferro/gentle-introduction-to-mongodb-concepts-m001-part-1-54el">already discussed</a> that the data are represented as <em>documents</em> in <em>collections</em>.</p>
+
+<p>When manipulating data with MongoDB, we are manipulating JSON (<em>Javascript Standard Object Notation</em>). See <a href="https://www.json.org/json-en.html">this introduction</a> if you never wrote JSON before or if you are looking for more information about the notation.</p>
+
+<pre><code class="language-json">{
+    &quot;course&quot;: &quot;MongoDB&quot;,
+    &quot;level&quot;: &quot;M001&quot;,
+    &quot;information&quot;: {
+        &quot;titre&quot;: &quot;Introduction to MongoDB&quot;,
+        &quot;description&quot;: &quot;Your first tour of the NoSQL database's feature&quot;
+    },
+    &quot;attendees&quot;: [
+        &quot;Thomas Ferro&quot;,
+        &quot;John Doe&quot;
+    ]
+}
+</code></pre>
+
+<p>JSON aim to be user-friendly and is already known by a great amount of developers. However, his text-based approach is space-consuming and limiting. MongoDB addresses these issues by compiling the data into the <a href="http://bsonspec.org/">BSON (<em>Binary JSON</em>) format</a>, optimized for speed, space and flexibility.</p>
+
+<p>JSON can be used when wanting to export the data in a human readable form, where BSON should be preferred when making a backup for instance.</p>
+
+<p>To Import and export your data, you will need your cluster&rsquo;s &ldquo;<em>srv URI</em>&rdquo; (secured <em>uniform resource identifier</em>) and one of the following command:</p>
+
+<ul>
+<li>JSON:
+
+<ul>
+<li>Export a collection as a JSON or a CSV file: <a href="https://docs.mongodb.com/manual/reference/program/mongoexport/"><code>mongoexport --uri &lt;URI to your cluster&gt; --collection=&lt;collection name&gt; --out=&lt;your file&gt;.json</code></a></li>
+<li>Import a collection from a JSON or a CSV file: <a href="https://docs.mongodb.com/manual/reference/program/mongoimport/"><code>mongoimport --uri &lt;URI to your cluster&gt; --out=&lt;your file&gt;.json</code></a> (can have an additional argument with the targeted collection)</li>
+</ul></li>
+<li>BSON:
+
+<ul>
+<li>Export the content from a database as a binary file: <a href="https://docs.mongodb.com/manual/reference/program/mongodump/"><code>mongodump --uri &lt;URI to your cluster&gt;</code></a></li>
+<li>Restore the database from a binary extract: <a href="https://docs.mongodb.com/manual/reference/program/mongorestore/"><code>mongorestore --uri &lt;URI to your cluster&gt; --drop &lt;your_dump&gt;</code></a></li>
+</ul></li>
+</ul>
+
+<p>Here is an example of a URI:</p>
+
+<pre><code>mongodb+srv://&lt;your username&gt;:&lt;your password&gt;@&lt;your cluster&gt;.mongodb.net/&lt;your database&gt;
+</code></pre>
+
+<p>Please notice that the password is not mandatory to the URI, but you will be prompted to enter it if you do not set it there.</p>
+
+<h2>Explore your data from Atlas&rsquo; UI</h2>
+
+<p>In a cluster, click on the &ldquo;<em>collections</em>&rdquo; button to access the view with every databases and collections.</p>
+
+<p><img src="https://github.com/ThomasFerro/readmes/blob/master/posts/21-mongodb-basic-data-manipulation/atlas-explore-collection.png?raw=true" alt="Explore a collection" /></p>
+
+<p>The &ldquo;<em>Find</em>&rdquo; tab shows the currently selected collection&rsquo;s documents, filterable with the query filed above the documents. Queries must use valid JSON, we will be discussing more on that matter later.</p>
+
+<p><img src="https://github.com/ThomasFerro/readmes/blob/master/posts/21-mongodb-basic-data-manipulation/atlas-find-documents.png?raw=true" alt="Explore documents" /></p>
+
+<p>You can see other tabs like &ldquo;<em>Indexes</em>&rdquo;, which refer to more advanced concepts regarding MongoDB. We will cover them in future articles.</p>
+
+<h2>Explore your data from a terminal</h2>
+
+<p><a href="https://docs.atlas.mongodb.com/mongo-shell-connection/">Connect to the cluster from a terminal</a> then use the <code>find</code> command.</p>
+
+<p>First, show the cluster&rsquo;s databases with the command <code>show dbs</code> and choose the one to use with the command <code>use your_database</code>.</p>
+
+<p>To view the collection in the selected database, enter the command <code>show collections</code>.</p>
+
+<p>Get every document in a collection with the <code>find</code> command. For instance, in order to get every <em>grade</em> in the <em>trainings</em> collection, use <code>db.trainings.find({})</code>.</p>
+
+<p>This command will only show you the first 20 documents. To continue exploring your collection, type the command <code>it</code> (to &ldquo;<em>iterate</em>&rdquo; through the <strong>cursor</strong>).</p>
+
+<p>A <strong>cursor</strong> is the object returned by the <code>find</code> command, a pointer to a result set of your query.</p>
+
+<p>In order to count every document, you can chain the <code>.count()</code> command in the previous query:</p>
+
+<pre><code class="language-js">db.trainings.find({}).count()
+</code></pre>
+
+<p>You can also simply replace the <code>find</code> command with a <code>count</code>:</p>
+
+<pre><code class="language-js">db.trainings.count({})
+</code></pre>
+
+<p>To view the results in a more readable format, use the <code>pretty()</code> method at the end of your command:</p>
+
+<pre><code class="language-js">db.trainings.find({}).pretty()
+</code></pre>
+
+<p>Most of the time, you will need to query your data and not simply getting all of the document. To do so, we will fill the previously empty curly braces with what we need to look for, following the <a href="https://docs.mongodb.com/manual/tutorial/query-documents/"><strong>query syntax</strong></a>.</p>
+
+<p>A good first example is to find documents with a field that matches a specified string. For instance, let us find every <em>training</em> regarding the <em>subject</em> of <em>MongoDB</em>:</p>
+
+<pre><code class="language-js">db.trainings.find({ &quot;subject&quot;: &quot;MongoDB&quot; })
+</code></pre>
+
+<p>You can also search for what are called <em>sub-documents</em>, nested JSON objects inside the document.</p>
+
+<p>What if we want to find this course while only knowing his title, inside the <em>information</em> sub-document?</p>
+
+<pre><code class="language-json">{
+    &quot;course&quot;: &quot;MongoDB&quot;,
+    &quot;level&quot;: &quot;M001&quot;,
+    &quot;information&quot;: {
+        &quot;titre&quot;: &quot;Introduction to MongoDB&quot;,
+        &quot;description&quot;: &quot;Your first tour of the NoSQL database's feature&quot;
+    },
+    &quot;attendees&quot;: [
+        &quot;Thomas Ferro&quot;,
+        &quot;John Doe&quot;
+    ]
+}
+</code></pre>
+
+<p>We can do that by using the following notation:</p>
+
+<pre><code class="language-js">db.trainings.find({ &quot;information.title&quot;: &quot;Introduction to MongoDB&quot; })
+</code></pre>
+
+<hr />
+
+<p>When searching for data, you may need to limit the number or returned result or to sort them. We can do these actions by using the corresponding <code>limit</code> and <code>sort</code> methods.</p>
+
+<p>Limiting the number of documents returned can be done by chaining a call to the <code>limit</code> method with the number of documents that you want after the <code>find</code> command:</p>
+
+<pre><code class="language-js">db.trainings.find({ &quot;subject&quot;: &quot;MongoDB&quot; }).limit(2)
+</code></pre>
+
+<p>Sorting looks pretty similar, but with a more complex syntax. You will need to specify every field that you want to use to sort. Each of those fields will have a value of <code>1</code> if you want an ascending sort or <code>-1</code> if you want a descending one.</p>
+
+<p>Searching for the least difficult training can be done using the following command:</p>
+
+<pre><code class="language-js">db.trainings.find({  }).sort({ &quot;difficulty&quot;: 1 }).limit(1)
+</code></pre>
+
+<p>There is a lot more to learn for querying data in MongoDB, like searching in arrays, comparing with booleans, numbers, partial matching and composition of queries.</p>
+
+<p>However, I think that this is a good time to take a break from querying, now that we covered the basics of MongoDB. The training seems to be on the same page since the chapter ends here 😁</p>
+
+<h2>Add new documents</h2>
+
+<h3>Through the Atlas UI</h3>
+
+<p>Here are the few steps required to insert a new document in your database.</p>
+
+<p>Select a collection and click the &ldquo;Insert document&rdquo; button (directly writing a JSON or one field-value pair at the time).</p>
+
+<p>The first thing that we see is an <code>_id</code> field populated with an <code>ObjectId</code>. Every document should have a valid identifier, but not specifically an <code>ObjectID</code>. For instance, if the best identifier for a <code>citizen</code> collection is his own identification number, feel free to use that.</p>
+
+<p>You can specify your unique value or let MongoDB find one by using the <code>ObjectId()</code> method.</p>
+
+<p>Then you can add as many field of the needed type as you want.</p>
+
+<p><img src="https://github.com/ThomasFerro/readmes/blob/master/posts/21-mongodb-basic-data-manipulation/atlas-add-document.png" alt="Insert a document" /></p>
+
+<h3>Through the shell</h3>
+
+<p>First, connect to your cluster from a shell and navigate to the database that you want to use with the <code>use</code> command.</p>
+
+<p>We will use the <code>insert</code> method to add a new document. Here is a basic example creating a document with only a <code>subject</code> field in the &ldquo;courses&rdquo; collection:</p>
+
+<pre><code class="language-js">db.courses.insert({
+  &quot;subject&quot;: &quot;MongoDB&quot;
+})
+</code></pre>
+
+<p>The identifier (<code>_id</code>) is automatically assigned with a generated unique identifier if not provided.</p>
+
+<p>This command should return the number of inserted documents.</p>
+
+<h3>Trying to create a document with an already declared identifier</h3>
+
+<p>Every document&rsquo;s <code>ObjectID</code> must be unique. When trying to add a document with an <code>ObjectID</code> that is already in the database, you will get a <code>duplicate key</code> error.</p>
+
+<pre><code class="language-sh">WriteResult({
+	&quot;nInserted&quot; : 0,
+	&quot;writeError&quot; : {
+		&quot;code&quot; : 11000,
+		&quot;errmsg&quot; : &quot;E11000 duplicate key error collection: sample_training.zips index: _id_ dup key: { _id: ObjectId('5c8eccc1caa187d17ca6ed29') }&quot;
+	}
+})
+</code></pre>
+
+<p>When importing data from a dump or an export, you may want to overwrite document with an already existing identifier. You can do so by using the <code>--drop</code> option.</p>
+
+<h3>Inserting many documents at once</h3>
+
+<p>One can insert several documents at once by passing an array to the command:</p>
+
+<pre><code class="language-js">db.courses.insert([{
+  &quot;subject&quot;: &quot;MongoDB&quot;
+}, {
+  &quot;subject&quot;: &quot;Atlas&quot;
+}])
+</code></pre>
+
+<p>Again, this command returns the number of inserted documents and other useful information.</p>
+
+<h3>Error management when inserting many documents</h3>
+
+<p>When inserting many documents, MongoDB tries to insert them without modifying the provided order. This means that if the third documents out of a list of a hundred documents fails to insert, only the first two documents will be inserted.</p>
+
+<p>You can prevent that behaviour if needed by adding the <code>ordered</code> option:</p>
+
+<pre><code class="language-js">db.courses.insert([{
+  &quot;subject&quot;: &quot;MongoDB&quot;
+}, {
+  &quot;subject&quot;: &quot;Atlas&quot;
+}], { &quot;ordered&quot;: false })
+</code></pre>
+
+<h2>Updating a document</h2>
+
+<h3>Through the Atlas UI</h3>
+
+<p>Once again, you will first need to connect to the Atlas UI and select the collection containing documents that you want to edit.</p>
+
+<p>You can then filter this collection to find the documents to update or scroll through all of the documents.</p>
+
+<p>Once you find the document to modify, click the &ldquo;<em>edit</em>&rdquo; button (the pencil) and start modifying the document as you wish.</p>
+
+<p><img src="https://github.com/ThomasFerro/readmes/blob/master/posts/21-mongodb-basic-data-manipulation/atlas-edit-document.png" alt="Edit a document" /></p>
+
+<p>This solution can work for punctually modifying a small amount of documents, but we will need the shell to perform more advanced and automated updating.</p>
+
+<h3>Through the shell</h3>
+
+<p>Update can be performed on one or many documents using respectively the <code>updateOne</code> and the <code>updateMany</code> commands. Both those commands have the same API, taking a query to find the documents to update as the first argument and <a href="https://docs.mongodb.com/manual/reference/operator/update/#id1">update operators in <strong>MQL</strong></a> as the second argument.</p>
+
+<p>First, we will try to update a single document. If several documents match the query, only the first one will be modified.</p>
+
+<p>Here is how we could fix a typo in our MongoDB course:</p>
+
+<pre><code class="language-js">db.courses.updateOne({
+  &quot;subject&quot;: &quot;Mongodb&quot;
+}, {
+  &quot;$set&quot;: {
+    &quot;subject&quot;: &quot;MongoDB&quot;
+  }
+})
+</code></pre>
+
+<p>As expected when using <code>updateOne</code>, the command will only perform the update on the first matching document. To update every document matching the query, we will use <code>updateMany</code>:</p>
+
+<pre><code class="language-js">db.courses.updateMany({
+  &quot;subject&quot;: &quot;Mongodb&quot;
+}, {
+  &quot;$set&quot;: {
+    &quot;subject&quot;: &quot;MongoDB&quot;
+  }
+})
+</code></pre>
+
+<p>That operation was a basic one, but MongoDB provides a lot of <a href="https://docs.mongodb.com/manual/reference/operator/update/#id1">update operators</a> that can be used depending of your use cases. I highly recommend that you read through the documentation to get a grasp at what MongoDB can do while updating your data.</p>
+
+<p>For instance, if we decide to add an array of students attending our courses, we can modify those students by using arrays update operators. Here is how we can add new students:</p>
+
+<pre><code class="language-js">db.courses.updateMany({
+  &quot;subject&quot;: &quot;Mongodb&quot;
+}, {
+  &quot;$push&quot;: {
+    &quot;students&quot;: { &quot;$each&quot;: [ &quot;Eliot Horowitz&quot;, &quot;Kevin Ryan&quot;, &quot;Dwight Merriman&quot; ] }
+  }
+})
+</code></pre>
+
+<p>Here I pushed simple strings into the <code>students</code> array, but you can add any data structure you need.</p>
+
+<hr />
+
+<p>The last thing I want to discuss regarding updating is the concept of <em>upsert</em>. When using this option, MongoDB will automatically create a new document if it does not find anyone matching your query. An ordinary update will be done if one or more documents match the query.</p>
+
+<pre><code class="language-js">db.&lt;collection&gt;.updateOne({ &lt;query_to_find_your_document&gt; }, { &lt;update_or_create_operation&gt; }, { &quot;upsert&quot;: true }); 
+// Also works with updateMany
+</code></pre>
+
+<h2>Deleting documents</h2>
+
+<h3>Through the Atlas UI</h3>
+
+<p>Navigate to the collection with the documents to delete just like you did to update a document. Instead of clicking the edit button (the pencil), click the remove button (the bin). You can also delete a complete database or a collection by hovering them in the Data Explorer and clicking the corresponding remove button.</p>
+
+<h3>From the shell</h3>
+
+<p>You will once again be provided with two methods: one to remove a single document (<code>deleteOne</code>) and one to remove many documents (<code>deleteMany</code>). Consider using <code>deleteOne</code> only when deleting a document with a provided identifier, preventing you from only deleting one document when your goal was to remove every matching elements.</p>
+
+<p>The first parameter of the delete methods if the same used in the <code>find</code> or <code>update</code> ones. You can use it to query the documents to remove. For instance, removing every &ldquo;MongoDB&rdquo; courses from our collection can be done using this command:</p>
+
+<pre><code class="language-js">db.courses.deleteMany({
+  &quot;subject&quot;: &quot;Mongodb&quot;
+})
+</code></pre>
+
+<p>Removing a collection can be done using the <code>drop</code> command:</p>
+
+<pre><code class="language-js">db.courses.drop()
+
+show collections
+// The &quot;courses&quot; collection is no longer here
+</code></pre>
+
+<hr />
+
+<p>With this last section, we covered every basic database operations (<em>CRUD operations</em> for <em>Create Read Update Delete</em>). Next, we will see more advanced data manipulation.</p>
+</main>
+</body>
+</html>

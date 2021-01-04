@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Introduction to Svelte - Adapting a board game - Thomas Ferro</title>
+    <link rel="stylesheet" href="/assets/styles/font.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/main.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/title.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/list.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/blockquote.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/figure.css" type="text/css">
+</head>
+<body>
+    <header><a href="/">Thomas Ferro</a></header>
+    <main><h1>Introduction to Svelte - Adapting a board game</h1>
+
+<blockquote>
+<p>Or how being trollish almost made me skip a gem.</p>
+</blockquote>
+
+<h2>Yet another state of JS</h2>
+
+<p><img src="https://github.com/ThomasFerro/readmes/blob/master/posts/11-introduction-to-svelte-adapting-a-board-game/state-of-js.png" alt="Extracted from the 2019 survey of &ldquo;State of JS - Front-End frameworks&rdquo;: https://2019.stateofjs.com/front-end-frameworks/" /></p>
+
+<blockquote>
+<p>Extracted from the 2019 survey of <a href="https://2019.stateofjs.com/front-end-frameworks/">&ldquo;State of JS - Front-End frameworks&rdquo;</a></p>
+</blockquote>
+
+<p>So, you want to build a Web application? You have been searching for the best tool to do the job, reading articles and tech radars? The landscape has not change that much since 2019, with three behemoths dominating the market.</p>
+
+<p>React, Angular and Vue, three frameworks (and associated cults) with quite a similar promise : helping us build reactive application, while taking full advantage of the components approach.</p>
+
+<p>I will not be able to talk much about Angular and React, since I have chosen to focus on Vue for the last three years. I bet that you will be able to do the analogy of what I will say with the framework of your heart.</p>
+
+<p>It is common knowledge that Vue.js is the one of the three with the cheapest entry cost. I agreed with this statement for a long time, preaching for my parish as we developers do. Yet, as time goes by, I found myself being more critical about the Vue approach.</p>
+
+<p>I have been teaching Vue for about a year now, and every time I do, I lost some of the students with all of the concepts. The issue is not that there are too many of them, but everyone comes with caveat, exception and sometimes different syntax. It is very confusing for people trying to start using the framework.</p>
+
+<p>Those &ldquo;issues&rdquo; can be described as the entry cost of Vue.js. Yet, the more I think about those pain points, the more I feel that we developers pay the price of the technical complexity that should be abstracted by the framework. When learning Vue you will eventually get over it, but why should we?</p>
+
+<p>Please note that I am talking about Vue 2.x. The Composition API might be the solution, but I have yet to try it.</p>
+
+<p>I do not know if the same can be said about the other two, please let me know your point of view on this matter!</p>
+
+<h2>The native way</h2>
+
+<p>Are native Web Components a thing? I would love to believe that. No framework shipped to the user, only a standard way of creating, exposing and using components!</p>
+
+<p>But let&rsquo;s be honest, we are far from it. Far from building our complex applications with no framework. The current state of the art is to ship lots and lots of dependencies for our application to run. The more Javascript the better!</p>
+
+<p>The standard way is stillborn. Or is it?</p>
+
+<h2>What about Svelte?</h2>
+
+<p>&ldquo;Svelte, you say? Another contender? What is it going to be, two months or three until we all forget about it?&rdquo; These were my first thoughts when I heard about Svelte.</p>
+
+<p>&ldquo;Cybernetically enhanced web apps? Was there no other marketing nonsense available?&rdquo; These were my thoughts when I landed on the tool&rsquo;s website.</p>
+
+<p>&ldquo;Wait, that&rsquo;s actually a great set of promises!&rdquo; These were my thoughts when I finished reading the main page.</p>
+
+<p>&ldquo;Wow, it must be the best tutorial I have ever seen!&rdquo; These were my thoughts when <a href="https://twitter.com/Thomas_Ferro_md/status/1210242504085377025">I finished reading the tutorials</a>.</p>
+
+<p>Remember my laments about the current state of JS? About native Web Components? Turns out I might have been missing the tool that meets my expectations.</p>
+
+<p>Svelte is not like the golden three frameworks. Instead of doing the heavy lifting in the browser like React, Vue and Angular, Svelte does it in <strong>compile time</strong>. Instead of shipping the framework to the user, we only ship native Web Components.</p>
+
+<p>The only concern that I have is with compatibility. What about browser that does not support Web Components APIs? (I have yet to double-check on this)</p>
+
+<h2>Before we start, what is Armadora</h2>
+
+<p>Todo lists applications are ok. They are certainly more valuable than Hello Worlds for learning, but I much prefer a bigger project. I know that games are usually created using 2d or 3d drawing libraries, but I thought that a HTML game would be just fine for my objective : to adapt a board game as a Web application.</p>
+
+<p>Armadöra is a game designed by <strong>Christwart Conrad</strong>, helped by artist <strong>Tony Rochon</strong>.</p>
+
+<p>Here is the description of the game, as stated in the game&rsquo;s guide:</p>
+
+<blockquote>
+<p>True to their reputation, Dwarfs amassed a large amount of gold. Armadöra thus became a highly coveted land for Elves, Orcs, Goblins and Mages who are all now assembling their respective forces. Let the siege of Armadöra begin!</p>
+
+<p>Position your troops, raise the barricades, but make no mistake about it, a single error may undermine your strategy!</p>
+</blockquote>
+
+<p>I would like to thank <em>Blackrock Games</em>, the game&rsquo;s editor, for allowing me to use their property for educational purpose.</p>
+
+<h2>How to start?</h2>
+
+<p>Before starting any project of your own, I cannot recommend you enough to read and play through the tutorials. They are well written, straight to the point and it does not require too much time. It took me a couple of hours, but I think that it was thanks to my Vue.js background.</p>
+
+<p>I will describe every interesting parts of the making of the game in order to introduce you to Svelte&rsquo;s beauties.</p>
+
+<p>The first part might be the least interesting, the setup. Between you and me, I don&rsquo;t like setups. It&rsquo;s coarse and rough and irritating and it gets everywhere. Not like with Svelte&rsquo;s setup tool.</p>
+
+<p>The Vue ecosystem makes a great job at abstracting the setup and the configuration with Vue CLI. I was not expecting to find a similar tool with Svelte, but I was wrong (well, for projet initialization at least).</p>
+
+<p>One way to bootstrap a Svelte project is by using the <code>degit</code> package, who provides application templates for you to use. I did not use the tool for anything else yet, but the job I asked it to do was well done. Isn&rsquo;t what a tool is supposed to do?</p>
+
+<p><img src="https://github.com/ThomasFerro/readmes/blob/master/posts/11-introduction-to-svelte-adapting-a-board-game/default-project.png" alt="Default project" /></p>
+
+<p>Simply install the dependencies (<code>npm install</code>) then run the <code>npm run dev</code> command and you are up and running!</p>
+
+<h2>Svelte 101</h2>
+
+<p>Now that we have a working application, let me introduce <code>.svelte</code> files. Similar to <code>.vue</code> files in guess what ecosystem, those files allow you to describe a component that can be used anywhere you like.</p>
+
+<p>Well, <em>describe</em> might not be the best choice of word. A description of a component is what you do when using the Vue syntax for instance.</p>
+
+<p><img src="https://github.com/ThomasFerro/readmes/blob/master/posts/11-introduction-to-svelte-adapting-a-board-game/vue-hello-world.png" alt="&ldquo;Hello world&rdquo; example from Vue documentation" /></p>
+
+<p>With Svelte, there is no heavy descriptive syntax to use. You want a data named <code>applicationName</code>? How would you do it with plain old Javascript? You are right, with a <em>variable</em>.</p>
+
+<pre><code class="language-html">&lt;script&gt;
+  const applicationName = 'Armadora' 
+&lt;/script&gt;
+</code></pre>
+
+<p>That is all for me, thanks for reading, bye bye!</p>
+
+<p>Jokes aside, it feels really good not to learn a heavy syntax for such simple tasks. There will be some to learn, but not for simple purposes like that.</p>
+
+<p>Now, you want to display the variable value in the browser? Go on and interpolate it in the template!</p>
+
+<pre><code class="language-html">&lt;h1&gt;{applicationName}&lt;/h1&gt;
+</code></pre>
+
+<p>Any code in the curly braces is Javascript ran in the context of your component. You can write anything you want, even trying to do math in JS: <code>{0.1 + 0.2}</code>.</p>
+
+<p>Going back to our example, in the App.svelte component (for now), if we want to display the number of palisades left, it will look something like this :</p>
+
+<pre><code class="language-html">&lt;script&gt;
+  let palisadesLeft = 35
+&lt;/script&gt;
+
+&lt;main&gt;
+  Palisades left: {palisadesLeft}
+&lt;/main&gt;
+</code></pre>
+
+<p><img src="https://github.com/ThomasFerro/readmes/blob/master/posts/11-introduction-to-svelte-adapting-a-board-game/palisades-left.png" alt="Results of the example above" /></p>
+
+<h2>Actions and dynamic attributes</h2>
+
+<p>You can argue that what we have done so far is nothing more than a static page made with way more tools than necessary. You will be right. You impatient reader.</p>
+
+<p>To make the magic happen, let us add some interactions.</p>
+
+<p>The game&rsquo;s implementation is going to be way more complex, but for know we are going to say that for a player to put a palisade, he just have to click a button. Such fun, I know.</p>
+
+<p>You can, in vanilla Javascript, listen for a DOM event in an element. For instance, listening to a click on a button will look like this:</p>
+
+<pre><code class="language-js">document.querySelector('button').addEventListener('click', methodCalledOnClick)
+</code></pre>
+
+<p>This syntax is simplified with Svelte:</p>
+
+<pre><code class="language-html">&lt;button on:click={methodCalledOnClick}&gt;Click me if you dare!&lt;/button&gt;
+</code></pre>
+
+<p>Of course, every <a href="https://developer.mozilla.org/en-US/docs/Web/Events">DOM event</a> can be listened for.</p>
+
+<p>Before applying this concept, remember what I said about the variables? That simply declaring them makes them available in the HTML template? Well, the same goes for the functions!</p>
+
+<p>Decrement our palisade count will therefore be done this way:</p>
+
+<pre><code class="language-html">&lt;script&gt;
+  let palisadesLeft = 35
+
+  const putPalisade = () =&gt; palisadesLeft--
+&lt;/script&gt;
+
+&lt;main&gt;
+  Palisades left: {palisadesLeft}
+  &lt;button on:click={putPalisade}&gt;Put a palisade&lt;/button&gt;
+&lt;/main&gt;
+</code></pre>
+
+<p><img src="https://github.com/ThomasFerro/readmes/blob/master/posts/11-introduction-to-svelte-adapting-a-board-game/put-palisade.png" alt="Results of the example above" /></p>
+
+<p>&ldquo;Wait a minute&rdquo;, I hear you say, &ldquo;We can go below zero and have minus 20 palisades left ! We trusted you Thomas !&rdquo;</p>
+
+<p>Baby steps ! Now that we have a button, we can make the <code>putPalisade</code> method a bit smarter, and we can also introduce a new concept: dynamic attributes.</p>
+
+<p>Remember when we interpolate JS variable into the template as text to be displayed? Well, we can do just that with HTML attributs to !</p>
+
+<p>You want to dynamically disable a button, based on a JS variable? Let&rsquo;s do it !</p>
+
+<pre><code class="language-html">&lt;button disabled={shouldTheButtonBeDisabled}&gt;My awesomely pointless button&lt;/button&gt;
+</code></pre>
+
+<p>In our palisades example, it will look something like this:</p>
+
+<pre><code class="language-html">&lt;script&gt;
+  let palisadesLeft = 35
+  let hasPalisadesLeft = true
+
+  const putPalisade = () =&gt; {
+    if (palisadesLeft &gt; 0) {
+        palisadesLeft--
+    }
+    hasPalisadesLeft = palisadesLeft &gt; 0
+  }
+&lt;/script&gt;
+
+&lt;main&gt;
+  Palisades left: {palisadesLeft}
+  &lt;button on:click={putPalisade} disabled={!hasPalisadesLeft}&gt;Put a palisade&lt;/button&gt;
+&lt;/main&gt;
+</code></pre>
+
+<p>Any HTML attribute can be made dynamic with this technique.</p>
+
+<p>If your hair stood up while seeing the <code>hasPalisadesLeft</code> variable, hold your horses, we will discuss this just now !</p>
+
+<h2>To reactivity and beyond !</h2>
+
+<p>This <code>hasPalisadesLeft</code> business smells. Having to manage multiple data for something that clearly could be computed (excuse my Vue) seems like a lot of work.</p>
+
+<p>Is there any way to have a variable that is automatically recomputed when any of the dependency changes? Of course it is, I would have swept it under the carpet otherwise.</p>
+
+<p>I have to say, the syntax of this feature bugs me a little, but here is how we do it using <em>labels</em>. In this example, the fullname will be recomputed whenever the firstname or lastname changes:</p>
+
+<pre><code class="language-html">&lt;script&gt;
+    let firstname = 'Thomas'
+    let lastname = 'Ferro'
+
+    $: fullname = `${firstname} ${lastname}`
+&lt;/script&gt;
+
+&lt;span&gt;{fullname}&lt;/span&gt;
+</code></pre>
+
+<p>We can go even further and creating a whole function that will be called again if any dependency changes:</p>
+
+<pre><code class="language-html">&lt;script&gt;
+    let firstname = 'Thomas'
+    let lastname = 'Ferro'
+
+    $: {
+        console.log(firstname, lastname);
+    }
+&lt;/script&gt;
+</code></pre>
+
+<p>What does any of these reactivity magic have to do with our <code>hasPalisadesLeft</code>? Well, as I said earlier, this data is simply another representation of the <code>palisadesLeft</code> count. So we can make a reactive data instead of setting it manually:</p>
+
+<pre><code class="language-html">&lt;script&gt;
+  let palisadesLeft = 35
+
+  $: hasPalisadesLeft = palisadesLeft &gt; 0
+
+  const putPalisade = () =&gt; {
+    if (palisadesLeft &gt; 0) {
+        palisadesLeft--
+    }
+  }
+&lt;/script&gt;
+
+&lt;main&gt;
+  Palisades left: {palisadesLeft}
+  &lt;button on:click={putPalisade} disabled={!hasPalisadesLeft}&gt;Put a palisade&lt;/button&gt;
+&lt;/main&gt;
+</code></pre>
+
+<h2>Conditional rendering and looping</h2>
+
+<p>One common need in templating is the ability to render parts of HTML only if a predicate condition is met. One will achieve that in Svelte with the <code>#if</code>, <code>:else if</code> and <code>:else</code> keywords.</p>
+
+<pre><code class="language-html">&lt;script&gt;
+    const displayContent = true
+&lt;/script&gt;
+
+{#if displayContent}
+&lt;h1&gt;My content !&lt;/h1&gt;
+{:else}
+The content cannot be displayed.
+{/if}
+</code></pre>
+
+<p>As the tutorial says:</p>
+
+<blockquote>
+<p>A <code>#</code> character always indicates a block opening tag. A <code>/</code> character always indicates a block closing tag. A <code>:</code> character, as in <code>{:else}</code>, indicates a block continuation tag. Don&rsquo;t worry — you&rsquo;ve already learned almost all the syntax Svelte adds to HTML.</p>
+</blockquote>
+
+<p>Where to put that in practice in our application? Pretty much everywhere. Let us say that we have to display the winner at the end of the game, a big old <code>if</code> can do the trick !</p>
+
+<pre><code class="language-html">&lt;script&gt;
+    const winner = 'Orcs'
+	// [...]
+&lt;/script&gt;
+
+{#if !winner}
+[The game board and controls...]
+{:else}
+&lt;section class=&quot;winner-display&quot;&gt;
+	{winner} wins !
+&lt;/section&gt;
+{/if}
+</code></pre>
+
+<p>Another thing you can do is to repeat some part of the template based on data. You will do that with the <code>each</code> keyword.</p>
+
+<pre><code class="language-html">&lt;script&gt;
+  const blogPosts = [
+		'My first article',
+		'Why my first article was dumb',
+		'Is my second article to trust?',
+		'Lesson learned - or why will I never blog again',
+	]
+&lt;/script&gt;
+
+&lt;main&gt;
+	&lt;h1&gt;My blog !&lt;/h1&gt;
+    {#each blogPosts as post}
+	&lt;article&gt;
+		&lt;h2&gt;{post}&lt;/h2&gt;
+	&lt;/article&gt;
+	{/each}
+&lt;/main&gt;
+</code></pre>
+
+<p>You can put whatever you need inside the loop, and you also have access to the index as the second argument.</p>
+
+<p>Note: There is a notion of <code>keyed each blocks</code> that I will let you <a href="https://svelte.dev/tutorial/keyed-each-blocks">discover afterwards</a>.</p>
+
+<p>Displaying every player can be a good example of use-case:</p>
+
+<pre><code class="language-html">&lt;script&gt;
+    const players = [
+        {
+            character: 'Orc',
+            nickname: 'README.md'
+        },
+        {
+            character: 'Elf',
+            nickname: 'Javadoc'
+        },
+        {
+            character: 'Mage',
+            nickname: 'noobmaster69'
+        },
+    ]
+&lt;/script&gt;
+
+{#each players as player}
+&lt;section class=&quot;player&quot;&gt;
+	{player.nickname} playing {player.character}
+&lt;/section&gt;
+{/each}
+</code></pre>
+
+<p>Here, <code>player</code> can be destructured to directly access the attributes:</p>
+
+<pre><code class="language-html">&lt;script&gt;
+    const players = [
+        {
+            character: 'Orc',
+            nickname: 'README.md'
+        },
+        {
+            character: 'Elf',
+            nickname: 'Javadoc'
+        },
+        {
+            character: 'Mage',
+            nickname: 'noobmaster69'
+        },
+    ]
+&lt;/script&gt;
+
+{#each players as { nickname, character }}
+&lt;section class=&quot;player&quot;&gt;
+	{nickname} playing {character}
+&lt;/section&gt;
+{/each}
+</code></pre>
+
+<h2>More bindings</h2>
+
+<p>Remember the time when creating a form and fetching the data from it in Javascript was obnoxious? All the events to listen for, all the data to maintain up-to-date&hellip; Those days are long gone now with the help of <strong>inputs bindings</strong> !</p>
+
+<p>You can see those binding as a way to connect a JS variable to a HTML input. When updating the value, the field will be updated and vice versa.</p>
+
+<p>This feature can be used with many types of inputs, from the simple text to a <code>select</code> with multiple values. In any of those cases, you will use the <code>bind:value</code> syntax as follow:</p>
+
+<pre><code class="language-html">&lt;script&gt;
+	let name = 'world';
+&lt;/script&gt;
+
+&lt;input type=&quot;text&quot; bind:value={name}&gt;
+
+&lt;h1&gt;Hello {name}!&lt;/h1&gt;
+</code></pre>
+
+<p>I will not go into much details here since all I can do is paraphrase the <a href="https://svelte.dev/tutorial/text-inputs">documentation or the tutorial</a>.</p>
+
+<p>What I will do, however, is to continue implementing the game ! Input bindings can be useful with &ldquo;New player form&rdquo;, a basic form with a name and the chosen character:</p>
+
+<pre><code class="language-html">&lt;script&gt;
+	let nickname = &quot;&quot;
+	let character = undefined
+	
+	let availableCharacters = [
+		'Orc',
+		'Elf',
+		'Mage',
+		'Gobelin'
+	]
+&lt;/script&gt;
+
+&lt;ul&gt;
+	&lt;li&gt;Nickname: {nickname}&lt;/li&gt;
+	&lt;li&gt;Character: {character}&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;form&gt;
+	&lt;label&gt;
+		Nickname
+		&lt;input type=&quot;text&quot; bind:value={nickname}&gt;
+	&lt;/label&gt;
+	&lt;label&gt;
+		Character
+		&lt;select bind:value={character}&gt;
+			{#each availableCharacters as availableCharacter}
+			&lt;option value={availableCharacter}&gt;{availableCharacter}&lt;/option&gt;
+			{/each}
+		&lt;/select&gt;
+	&lt;/label&gt;
+&lt;/form&gt;
+</code></pre>
+
+<h2>The elephant in the room - What about components?</h2>
+
+<p>For maintainability, testability and whateverotherwordsthatendswithbility, we developers tend to split our applications in small modules. Many years of Clean Code made us think that for a module to be efficient, we need it to be <em>small</em>, <em>self-contained</em> and <em>reusable</em> if possible. These principle can also be applied in front-end development via the use of <strong>components</strong>.</p>
+
+<p>Luckily enough, we already have played with components since the beginning of our Svelte course ! In fact, every <code>.svelte</code> file represent a component.</p>
+
+<p>We will go through the process of <em>creating a new component</em>, to <em>importing and using it</em> and then we will see how we can manage <em>communication between components</em>.</p>
+
+<p>To create a new component, go ahead and create a new <code>MyFirstComponent.svelte</code> file next to the <code>App.svelte</code> (for now, we will clean up our rooms later). In that new file, you can apply every principle that we have seen so far ! We can for instance have internal data, bind those data in the template, etc.</p>
+
+<pre><code class="language-html">&lt;!-- MyFirstComponent.svelte --&gt;
+&lt;script&gt;
+  const title = &quot;My first component !!!!&quot;
+&lt;/script&gt;
+
+&lt;article&gt;
+	{title}
+&lt;/article&gt;
+</code></pre>
+
+<p>Great, now we have a component ! Next step is to import and use it. Let us say that we want this new component to be displayed in <code>App.svelte</code>. The first thing to do is to import the component, just like a JS module:</p>
+
+<pre><code class="language-html">&lt;!-- App.svelte --&gt;
+&lt;script&gt;
+	import MyFirstComponent from './MyFirstComponent.svelte'
+&lt;/script&gt;
+</code></pre>
+
+<p>We can now use the component in the template, <strong>just like any other HTML tag</strong> !</p>
+
+<pre><code class="language-html">&lt;!-- App.svelte --&gt;
+&lt;script&gt;
+	import MyFirstComponent from './MyFirstComponent.svelte'
+&lt;/script&gt;
+
+&lt;MyFirstComponent&gt;&lt;/MyFirstComponent&gt;
+</code></pre>
+
+<p>For a more concrete example, let us extract the display of a player in a <code>Player.svelte</code> component:</p>
+
+<pre><code class="language-html">&lt;!-- Player.svelte --&gt;
+&lt;section class=&quot;player&quot;&gt;
+	A player...
+&lt;/section&gt;
+</code></pre>
+
+<p>Oh.. Seems like we need to receive data about a player in order to display them in this component.. How could we manage to do that?</p>
+
+<p>This is the first <em>parent-child communication</em> tool that we will see: <strong>Props</strong> are used to communicate from the parent to a child. A props is nothing more than a variable, it can be a string, a number or any complex object. Here is how to declare a props:</p>
+
+<pre><code class="language-html">&lt;!-- Player.svelte --&gt;
+&lt;script&gt;
+    export let character
+    export let nickname
+&lt;/script&gt;
+&lt;section class=&quot;player&quot;&gt;
+    &lt;!-- Props can be used just like any internal data --&gt;
+    {nickname} playing {character}
+&lt;/section&gt;
+</code></pre>
+
+<p>As implied in the name, you need to provide data from the parent to effectively have a &ldquo;<em>parent-child communication</em>&rdquo;.</p>
+
+<p>You can do so by adding attributes when calling the custom component. Yes, just like any native HTML attribute:</p>
+
+<pre><code class="language-html">&lt;!-- App.svelte --&gt;
+&lt;script&gt;
+	import Player from './Player.svelte'
+&lt;/script&gt;
+
+&lt;Player character=&quot;Orc&quot; nickname=&quot;README.md&quot;&gt;&lt;/Player&gt;
+</code></pre>
+
+<p>Here, I set the value of the attributes manually, but nothing prevent us from binding values ! The reactivity black-magic will do the trick and any modification in the data of the parent will be reported in the children.</p>
+
+<pre><code class="language-html">&lt;!-- App.svelte --&gt;
+&lt;script&gt;
+    import Player from './Player.svelte'
+
+    const players = [
+        {
+            character: 'Orc',
+            nickname: 'README.md'
+        },
+        {
+            character: 'Elf',
+            nickname: 'Javadoc'
+        },
+        {
+            character: 'Mage',
+            nickname: 'noobmaster69'
+        },
+    ]
+&lt;/script&gt;
+
+{#each players as player}
+&lt;Player character={player.character} nickname={player.nickname}&gt;&lt;/Player&gt;
+{/each}
+</code></pre>
+
+<p>We have ourselves a working one-way data flow ! Try to code a form to add a player and see what happen !</p>
+
+<p>&hellip; Wait&hellip; &ldquo;one-way data flow&rdquo;? What about the other way? There is another way?</p>
+
+<p>We only have cover the parent to children communication, but there are use-cases when a component needs to talk to his parent. How to do that without breaking the golden rules of components? How could a component be <em>self-contained</em> if he needs to know whom his parent is? You can achieve that by dispatching events.</p>
+
+<p>The mantra for <em>parent-child communication</em> - and it applies to Vue.js too - is the following: <strong>Props down / Events up</strong>.</p>
+
+<p>The first thing you will need to do is to create an <em>event dispatcher</em>, using Svelte&rsquo;s exposed methods:</p>
+
+<pre><code class="language-html">&lt;!-- Child.svelte --&gt;
+&lt;script&gt;
+    import { createEventDispatcher } from 'svelte';
+    
+    const dispatcher = createEventDispatcher();
+&lt;/script&gt;
+</code></pre>
+
+<p>Then, when you want to dispatch an event, call the dispatcher with the name of the event as the first argument.</p>
+
+<pre><code class="language-html">&lt;!-- Child.svelte --&gt;
+&lt;script&gt;
+    import { createEventDispatcher } from 'svelte';
+    
+    const dispatcher = createEventDispatcher();
+
+    const sendEvent = () =&gt; {
+        dispatcher('my-custom-event')
+    }
+&lt;/script&gt;
+
+&lt;button on:click={sendEvent}&gt;Send event !&lt;/button&gt;
+</code></pre>
+
+<p>You can also send data through the event with the second argument. Those data are often referred to as <em>the payload</em> and can be of any type you need.</p>
+
+<p>Note: The payload can be retrieve in the <code>detail</code> attribute in the actual event.</p>
+
+<pre><code class="language-html">&lt;!-- Child.svelte --&gt;
+&lt;script&gt;
+    import { createEventDispatcher } from 'svelte';
+    
+    const dispatcher = createEventDispatcher();
+
+    const sendEvent = () =&gt; {
+        dispatcher('my-custom-event', {
+            name: 'Thomas',
+        })
+    }
+&lt;/script&gt;
+
+&lt;button on:click={sendEvent}&gt;Send event !&lt;/button&gt;
+</code></pre>
+
+<p>Let us say that we are creating a form, which can take the default name and age as <em>props</em>. The form is <strong>not responsible</strong> for the data, it is not his duty to modify them. When the form is complete, the child component will send an event, notifying his parent that the job is done:</p>
+
+<pre><code class="language-html">&lt;!-- ClientForm.svelte --&gt;
+&lt;script&gt;
+  import { createEventDispatcher } from 'svelte';
+    
+  const dispatcher = createEventDispatcher();
+	
+	export let name = undefined
+	export let age = undefined
+	
+	let newName = undefined
+	let newAge = undefined
+	
+	$: newName = name
+	$: newAge = age
+	
+	const validate = () =&gt; {
+		dispatcher('validate', {
+			name: newName,
+			age: newAge,
+		})
+	}
+&lt;/script&gt;
+
+&lt;input type=&quot;text&quot; bind:value={newName}&gt;
+&lt;input type=&quot;number&quot; bind:value={newAge}&gt;
+&lt;button on:click={validate}&gt;
+	Validate
+&lt;/button&gt;
+</code></pre>
+
+<pre><code class="language-html">&lt;!-- App.svelte --&gt;
+&lt;script&gt;
+	import ClientForm from './ClientForm.svelte';
+	let name = 'Thomas'
+	let age = 24
+	
+	const updateData = (payload) =&gt; {
+		name = payload.name
+		age = payload.age
+	}
+&lt;/script&gt;
+
+&lt;ul&gt;
+	&lt;li&gt;Name: {name}&lt;/li&gt;
+	&lt;li&gt;Age: {age}&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;!-- Here we need to fetch the 'detail' attribute from the event --&gt;
+&lt;ClientForm name={name} age={age} on:validate={(event) =&gt; updateData(event.detail)}&gt;&lt;/ClientForm&gt;
+</code></pre>
+
+<h2>Another example: building a grid</h2>
+
+<p>Before we wrap up, let me show you another example with the game&rsquo;s grid.</p>
+
+<p>This <em>grid</em> is composed of <em>cells</em> in which you can click to put a warrior.</p>
+
+<p>The cell can either contain a <em>warrior</em>, <em>gold</em> or it can be empty. We will abstract that by saying that it receive a <em>content</em> and we will be simply displaying the content. When clicking on a cell, the component simply propagate the event via the shortcut <code>on:click</code>.</p>
+
+<pre><code class="language-html">&lt;!-- Cell.svelte --&gt;
+&lt;script&gt;
+	export let content;
+&lt;/script&gt;
+
+&lt;button on:click&gt;
+	{content}
+&lt;/button&gt;
+</code></pre>
+
+<p>The grid component receive the state of each cell from his parent, via the <code>state</code> attribute which is a two dimensional array. It manages the click on a cell by emitting an event for his parent to listen.</p>
+
+<pre><code class="language-html">&lt;!-- Grid.svelte --&gt;
+&lt;script&gt;
+	import { createEventDispatcher } from 'svelte';
+	import Cell from './Cell.svelte';
+	
+	export let state;
+	
+	const dispatch = createEventDispatcher();
+	
+	const cellClicked = (rowIndex, colIndex) =&gt; {
+		dispatch('cell-selected', {
+			row: rowIndex,
+			col: colIndex,
+		})
+	}
+&lt;/script&gt;
+
+&lt;article class=&quot;grid&quot;&gt;
+	{#each state as row, rowIndex}
+	&lt;section class=&quot;row&quot;&gt;
+		{#each row as cell, colIndex}
+			&lt;Cell
+			    content={cell}
+			    on:click={() =&gt; cellClicked(rowIndex, colIndex)}
+			&gt;&lt;/Cell&gt;
+		{/each}
+	&lt;/section&gt;
+	{/each}
+&lt;/article&gt;
+</code></pre>
+
+<p>The root component <code>App.svelte</code> is responsible for the actual data, changing the state of the grid when it receives an event from the grid. It is not the responsibility of the grid nor the cell to change the state.</p>
+
+<pre><code class="language-html">&lt;!-- App.svelte --&gt;
+&lt;script&gt;
+	import Grid from './Grid.svelte';
+	
+	const state = [
+		[ 'land', 'land', 'land', 'land', 'land', 'land', 'land', 'land' ],
+		[ 'land', 'land', 'land', 'land', 'land', 'land', 'land', 'land' ],
+		[ 'land', 'land', 'land', 'land', 'land', 'land', 'land', 'land' ],
+		[ 'land', 'land', 'land', 'land', 'land', 'land', 'land', 'land' ],
+		[ 'land', 'land', 'land', 'land', 'land', 'land', 'land', 'land' ],
+	]
+	
+	const cellSelected = (payload) =&gt; {
+        // Change the state based on the payload, the current player and the chosen action
+		state[payload.row][payload.col] = 'warrior'
+	}
+&lt;/script&gt;
+
+&lt;Grid state={state} on:cell-selected={(e) =&gt; cellSelected(e.detail)}&gt;&lt;/Grid&gt;
+</code></pre>
+
+<p>This is a simplified example of how those concepts can all fit together in a real application. The game&rsquo;s rules are not implemented to avoid noise, the point here is to show you parent-child communication in action.</p>
+
+<p>Now that you have the building blocks of an application, all you have to do is build your own ! Try to build this game or any other, or even a more traditional Web application :)</p>
+
+<h2>Disclaimers</h2>
+
+<p>The components and examples from this article are for studying purpose only. Building the actual game would require some kind of server with the game data to which every player will connect and interact with. However, I hope that it gives you a good idea of what you can do with Svelte !</p>
+
+<p>Please refer to the <a href="https://github.com/ThomasFerro/armadora">game&rsquo;s repository</a> if you want to take a look at the current state of the game.</p>
+
+<p>I purposely did not discussed what I consider to be advanced topics, such as <em>class binding</em>, <em>transitions</em>, <em>lifecycle</em> or <em>slots</em>. Please read through the documentation and build some projects on your own to fully discover the tool !</p>
+
+<h2>Wrapping up !</h2>
+
+<p>You may have noticed, I am really getting into Svelte. The promises are in line with my own opinions about Javascript frameworks and the Web at large, and it feels just good writing applications with this tool.</p>
+
+<p>I might not recommend it for every use-case yet, especially not knowing how it behave on old browsers. However, it is definitely worth learning if you feel tired of the Reacts, the Angulars and the Vues or just if you want to get into front-end development !</p>
+</main>
+</body>
+</html>

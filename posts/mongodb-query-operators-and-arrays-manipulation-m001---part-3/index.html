@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MongoDB query operators and arrays manipulation (M001 - Part 3) - Thomas Ferro</title>
+    <link rel="stylesheet" href="/assets/styles/font.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/main.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/title.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/list.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/blockquote.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/figure.css" type="text/css">
+</head>
+<body>
+    <header><a href="/">Thomas Ferro</a></header>
+    <main><h1>MongoDB query operators and arrays manipulation (M001 - Part 3)</h1>
+
+<blockquote>
+<p>When exact matching is not enough.</p>
+</blockquote>
+
+<p>We already covered the basic CRUD operations <a href="https://dev.to/thomasferro/a-pragmatic-approach-to-documents-manipulation-in-mongodb-m001-part-2-1mcf">in the previous article</a>. Before wrapping this section up, I would like to introduce more advanced concepts that are often used.</p>
+
+<h2>Comparing data</h2>
+
+<p>Until now, we almost exclusively search for documents by fields that should be strictly matching the provided query. This is far from the only type of comparison we use day to day.</p>
+
+<blockquote>
+<p><strong>Query operators</strong>: Tools to locale the requested data in a database.</p>
+</blockquote>
+
+<p>All of the operators we will use begin with the <code>$</code> sign.</p>
+
+<p>For instance, here is how to use a query operator: <code>{ &lt;field&gt;: { &lt;operator&gt;: &lt;value&gt; } }</code>.</p>
+
+<p>Here are some common operators to use:</p>
+
+<ul>
+<li><code>$eq</code>: &ldquo;<em>Equal to</em>&rdquo;, for exact matching;</li>
+<li><code>$ne</code>: &ldquo;<em>Not equal to</em>&rdquo;, for exclusion;</li>
+<li><code>$gt</code>: Match if the requested value is &ldquo;<em>greater than</em>&rdquo; the value provided in the query;</li>
+<li><code>$gte</code>: Match if the requested value is &ldquo;<em>greater than or equal to</em>&rdquo; the value provided in the query;</li>
+<li><code>$lt</code>: Match if the requested value is &ldquo;<em>less than</em>&rdquo; the value provided in the query;</li>
+<li><code>$lte</code>: Match if the requested value is &ldquo;<em>less than or equal to</em>&rdquo; the value provided in the query;</li>
+</ul>
+
+<p>For instance, searching for a city with <em>more than 10.000 citizens</em>  can look like this:</p>
+
+<pre><code class="language-js">db.cities.find({ &quot;citizens&quot;: { &quot;$gt&quot;: 10000 } })
+</code></pre>
+
+<p>Looking for cities <em>outside the USA</em> can be done using this type of query:</p>
+
+<pre><code class="language-js">db.cities.find({ &quot;country&quot;: { &quot;$ne&quot;: &quot;USA&quot; } })
+</code></pre>
+
+<p>Wait, what if I need to find the cities with <em>more than 10.000 citizens</em>, but <em>outside of the USA</em> at the same time? We will need to chain our statements to do so.</p>
+
+<h2>Chaining statements</h2>
+
+<p>Please do not stop reading, I promise that I am not going to hit you hard with the theory of <em>logic gates</em>.</p>
+
+<p>You may find yourself in a situation where you want documents matching several statements. Sometimes you may need to match all of the statements, sometime at least one of them, or even none.</p>
+
+<p>This is a common need in software development and it is also common when querying a database.</p>
+
+<p>For instance, we can represent the rules behind a gas station serving a customer with the following statement:</p>
+
+<pre><code class="language-js">const stationCanServeGas = customerPaymentAuthorized() &amp;&amp; thereIsGasLeft()
+</code></pre>
+
+<p>MongoDB provides the tools to achieve the same goal using a different syntax and <em>logic operators</em>.</p>
+
+<blockquote>
+<p><strong>Logic operators</strong>: Tools to chain statement with specific behaviours</p>
+</blockquote>
+
+<ul>
+<li><a href="https://docs.mongodb.com/manual/reference/operator/query/and/"><code>$and</code></a>: The documents must match <em>all</em> of the provided statements;</li>
+<li><a href="https://docs.mongodb.com/manual/reference/operator/query/or/"><code>$or</code></a>: The documents must match <em>at least one</em> of the statements;</li>
+<li><a href="https://docs.mongodb.com/manual/reference/operator/query/nor/"><code>$nor</code></a>: The documents must match <em>none</em> of the statements;</li>
+<li><a href="https://docs.mongodb.com/manual/reference/operator/query/not/"><code>$not</code></a>: Negates the provided expression.</li>
+</ul>
+
+<p>The first three operators <code>$and</code>, <code>$or</code> and <code>$nor</code> have a similar syntax with an array of statements:</p>
+
+<pre><code>{ &lt;operator&gt;: [ { statement1 }, { statement2 }, ... ] }
+</code></pre>
+
+<p>The <code>$not</code> operator is completely different, please read through <a href="https://docs.mongodb.com/manual/reference/operator/query/not/">the documentation</a> for more information about its behavior and syntax.</p>
+
+<p>Going back to the first operators, we can for instance find every valid users by making a query with every needed matching:</p>
+
+<pre><code class="language-js">db.users.find({
+    &quot;$and&quot;: [{
+        &quot;$or&quot;: [{
+            &quot;registrationCompleted&quot;: true
+        }, {
+            &quot;ongoingRegistration&quot;: true
+        }]
+    }, {
+        &quot;ongoingDeletion&quot;: false
+    }]
+})
+</code></pre>
+
+<p>The <code>$and</code> operator is implicit by default, meaning that you can ignore it in order to simplify your requests. Here is the previous request using the implicit <code>$and</code>:</p>
+
+<pre><code class="language-js">db.users.find({
+    &quot;$or&quot;: [{
+        &quot;registrationCompleted&quot;: true
+    }, {
+        &quot;ongoingRegistration&quot;: true
+    }],
+    &quot;$not&quot;: { &quot;ongoingDeletion&quot;: true }
+})
+</code></pre>
+
+<p>We can go even further with the implicit <code>$and</code> when doing multiple statements on the same field. Here are two ways of returning courses that take between 5 and 10 hours to complete:</p>
+
+<pre><code class="language-js">db.courses.find({
+    &quot;$and&quot;: [{
+        &quot;estimateTimeToComplete&quot;: {
+            &quot;$gt&quot;: 5
+        }
+    }, {
+        &quot;estimateTimeToComplete&quot;: {
+            &quot;$lt&quot;: 10
+        }
+    }]
+})
+
+db.courses.find({
+    &quot;estimateTimeToComplete&quot;: {
+        &quot;$gt&quot;: 5,
+        &quot;$lt&quot;: 10
+    }
+})
+</code></pre>
+
+<p>As you can see, there are several ways to achieve the same goal. Some are more verbose or readable than others. It is up to you to make them maintainable and easy to understand!</p>
+
+<h2>Comparing fields within a document with the expressive query operator</h2>
+
+<blockquote>
+<p><strong><a href="https://docs.mongodb.com/manual/reference/operator/query/expr/">Expressive query operator</a></strong>: Adds expressiveness to the query language by allowing us to use <em>variables</em> and <em>conditions</em> statements. It also allows for the use of aggregation expressions, discussed in a next article.</p>
+</blockquote>
+
+<p>Here is the basic syntax of this type of operator:</p>
+
+<pre><code>{ &quot;$expr&quot;: { &lt;statement&gt; } }
+</code></pre>
+
+<p>We can use the <code>$</code> symbol inside of an expressive query operator to <strong>reference a document&rsquo;s field value</strong>.</p>
+
+<p>Let us make this concept more concrete by seeing it in action. Here is how we can try to find cities that currently welcome more tourists than citizens:</p>
+
+<pre><code class="language-js">db.cities.find({
+    &quot;$expr&quot;: {
+        &quot;$gt&quot;: [&quot;$population&quot;, &quot;$tourists&quot;]
+    }
+})
+</code></pre>
+
+<p>Notice the change in the syntax, we will cover it in-depth when talking about the aggregation pipeline.</p>
+
+<h2>Querying and manipulating array fields</h2>
+
+<p>The MQL syntax offers many operators to query and manipulate arrays. We already used the <code>$push</code> operator in the previous article, here is a distilled explanation of it:</p>
+
+<blockquote>
+<p><strong><a href="https://docs.mongodb.com/manual/reference/operator/update/push/"><code>$push</code></a></strong>: Adds one or many elements to an array or turn the field into an array if it was of a different type.</p>
+</blockquote>
+
+<p>Here is how we can add a student in a course:</p>
+
+<pre><code class="language-js">db.courses.updateMany({
+    &quot;subject&quot;: &quot;Mongodb&quot;
+}, {
+    &quot;$push&quot;: {
+        &quot;students&quot;: &quot;Eliot Horowitz&quot;
+    }
+})
+</code></pre>
+
+<hr />
+
+<p>To search for a document based on elements in an array, we can use several approaches:</p>
+
+<ul>
+<li>When looking in an array with one provided element, no matter if there are other elements:
+<code>js
+db.&lt;collection&gt;.find({ &lt;the_array&gt;: &lt;one_of_the_element&gt; })
+</code>
+- When looking in an array with the exact list of elements provided:
+<code>js
+db.&lt;collection&gt;.find({ &lt;the_array&gt;: [&lt;the_first_element&gt;, &lt;the_second_element&gt;, &lt;...&gt;] })
+</code></li>
+<li>When looking in an array with the provided list of elements in any order:
+<code>js
+db.&lt;collection&gt;.find({ &lt;the_array&gt;: { &quot;$all&quot;: [&lt;the_first_element&gt;, &lt;the_second_element&gt;, &lt;...&gt;] } })
+</code>
+We also have the possibility to search for an array with a specified length using the <code>$size</code> operator. For instance, looking for courses with 10 students and with Eliot Horowitz, Kevin Ryan and Dwight Merriman could look like this:
+<code>js
+db.courses.find({
+&quot;students&quot;: {
+    &quot;$size&quot;: 10,
+    &quot;$all&quot;: [
+        &quot;Eliot Horowitz&quot;,
+        &quot;Kevin Ryan&quot;,
+        &quot;Dwight Merriman&quot;,
+    ]
+}
+})
+</code></li>
+</ul>
+
+<hr />
+
+<p>One of the advanced tools for array querying is <em>$elemMatch</em>.</p>
+
+<blockquote>
+<p><strong><a href="https://docs.mongodb.com/manual/reference/operator/query/elemMatch">$elemMatch</a></strong>: Returns every document with the array field containing at least one element matching the query.</p>
+</blockquote>
+
+<p>Let us say that our <em>students</em> in the <em>courses</em> collection are now complex objects with their name, age and other useful information in this context. For legal purpose, we want to find courses with at least one student under 18. We can achieve that with the following query:</p>
+
+<pre><code class="language-js">db.courses.find({
+    &quot;students&quot;: {
+        &quot;$elemMatch&quot;: {
+            &quot;age&quot;: {
+                &quot;$lte&quot;: 18
+            }
+        }
+    }
+})
+</code></pre>
+
+<hr />
+
+<p>Another useful tool provided by the <em>MQL</em> allows us to search for a specific element in an array based on his index.</p>
+
+<p>Say for instance that we want to get every courses where the first student is named &ldquo;Merriman&rdquo;. We could achieve this goal using the following syntax:</p>
+
+<pre><code class="language-js">db.courses.find({
+    &quot;students.0.name&quot;: &quot;Merriman&quot;
+})
+</code></pre>
+
+<h2>Leaner find results with projections</h2>
+
+<p>We can decide which fields to return in a query by specifying a <em>projection</em>.</p>
+
+<pre><code class="language-js">db.&lt;collection&gt;.find({ &lt;query&gt; }, { &lt;projection&gt; })
+</code></pre>
+
+<p>With the projection being a set of key-value pairs with the value being <strong>1 if we want the field to be included</strong> or <strong>0 if we want it excluded</strong>. Note that you cannot mix zeros and ones in a single projection, except for the &ldquo;_id&rdquo; field that can be excluded in a projection with included fields.</p>
+
+<p>For instance, if we only want the students and the subject of a course, we can define the following projection:</p>
+
+<pre><code class="language-js">db.courses.find({}, {
+    &quot;subject&quot;: 1,
+    &quot;students&quot;: 1
+})
+</code></pre>
+
+<p>Combining projections and query is also possible. Here is how we can use our previous query, but only return the subject of the matching courses:</p>
+
+<pre><code class="language-js">db.courses.find({
+    &quot;students&quot;: {
+        &quot;$size&quot;: 10,
+        &quot;$all&quot;: [
+            &quot;Eliot Horowitz&quot;,
+            &quot;Kevin Ryan&quot;,
+            &quot;Dwight Merriman&quot;,
+        ]
+    }
+}, {
+    &quot;subject&quot;: 1,
+})
+</code></pre>
+
+<hr />
+
+<p>This article wraps the first part of the series regarding the MongoDB certification. It has been a long yet interesting journey! I hope that you are as eager as I am to cover basic cluster administration, the aggregation framework and the last subjects of the course 😁</p>
+</main>
+</body>
+</html>

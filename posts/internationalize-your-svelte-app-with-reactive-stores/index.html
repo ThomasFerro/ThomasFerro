@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Internationalize your Svelte app with reactive stores - Thomas Ferro</title>
+    <link rel="stylesheet" href="/assets/styles/font.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/main.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/title.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/list.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/blockquote.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/figure.css" type="text/css">
+</head>
+<body>
+    <header><a href="/">Thomas Ferro</a></header>
+    <main><h1>Internationalize your Svelte app with reactive stores</h1>
+
+<blockquote>
+<p>You either pick a i18n library or live long enough to write your own</p>
+</blockquote>
+
+<p>I must confess something to you, and I hope that you will forgive me for it: I am French 🇫🇷🥖🧀🍷🐸🇫🇷.</p>
+
+<p>I tend to write my applications in English in order to make them accessible to the greatest number of developers around the world. However, I sometime forget about the people closest to me.</p>
+
+<p>I recently asked my family to beta test an <a href="https://dev.to/thomasferro/introduction-to-svelte-adapting-a-board-game-emc">adaptation of a board game</a> that I am building and the first feedback that I got was my girlfriend asking me &ldquo;<em>pourquoi c&rsquo;est en anglais ?</em>&rdquo; (&rdquo;<em>why is your game in English?</em>&rdquo;).</p>
+
+<p>Fair point. I immediately added an issue on this subject and start thinking about how to internationalize the application. Oh, and for those who wonder what <strong>i18n</strong> means, it is a commonly used abbreviation for <em>internationalization</em>, where the eighteen characters between the <em>i</em> and the <em>n</em> are represented by the <em>18</em>.</p>
+
+<p>I already worked on that subject in my early days of Vue.js developer, using <a href="https://kazupon.github.io/vue-i18n/">Kazupon&rsquo;s <code>Vue I18n</code> library</a>. I loved the ease of use of the API, simply calling a <code>$t</code> method with the translation key in order to make everything work.</p>
+
+<p>I wanted to find a Svelte alternative with the same appeal, but then think that it could make a great use case to learn to use a tool that I never practice before: the stores.</p>
+
+<p>Again, I do not encourage you to build a new solution from scratch for every technical subject, especially when there is already <a href="https://github.com/kaisermann/svelte-i18n">well maintained alternatives</a>. However, for now, let us learn how to use Svelte&rsquo;s stores to build a reactive internationalization mechanism 😁</p>
+
+<h2>Building the i18n mechanism</h2>
+
+<p>Practicing <em>Test Driven Development</em> has taught me something that I love to use when I have the opportunity, always starts by building the API that fits you the most. Only starts working on implementation details once the intention is clear.</p>
+
+<p>Let us do just that and imagine the API of our dreams, starting with how to ask the system for a specific translation.</p>
+
+<p>I like the idea of calling a simple method, directly from the template or from the <code>&lt;script&gt;</code>, something like this:</p>
+
+<pre><code class="language-svelte">&lt;script&gt;
+  import { i18n } from './i18n';
+
+  // A localized message injected in the script
+  $: authenticationErrorMessage = i18n('authenticationError')
+&lt;/script&gt;
+
+&lt;!-- A localized message directly called from the template --&gt;
+&lt;h1&gt;{i18n('welcomeMessage')}&lt;/h1&gt;
+
+&lt;p&gt;{authenticationErrorMessage}&lt;/p&gt;
+</code></pre>
+
+<p>Obviously we will need a method to change the current locale, a method that will hopefully be able to change automatically every translation in the page without a refresh (spoiler alert: it will).</p>
+
+<pre><code class="language-svelte">&lt;script&gt;
+  import { i18n, changeLocale } from 'path/to/i18n';
+&lt;/script&gt;
+
+&lt;button on:click={() =&gt; changeLocale('fr')}&gt;{i18n('switchToFrench')}&lt;/button&gt;
+&lt;button on:click={() =&gt; changeLocale('en')}&gt;{i18n('switchToEnglish')}&lt;/button&gt;
+</code></pre>
+
+<p>We could use <em>JSON</em> objects to manage the translations, one file per locale for instance:</p>
+
+<pre><code class="language-json">{
+  &quot;welcomeMessage&quot;: &quot;Welcome!&quot;,
+  &quot;authenticationError&quot;: &quot;Unable to authenticate...&quot;,
+  &quot;switchToFrench&quot;: &quot;Switch to french&quot;,
+  &quot;switchToEnglish&quot;: &quot;Switch to english&quot;
+}
+</code></pre>
+
+<p>Having already worked in large scoped projects, I know that the number of labels can grow pretty fast. It would be nice if we could allow for the use of nested objects.</p>
+
+<pre><code class="language-svelte">&lt;h1&gt;{i18n('home.welcomeMessage')}&lt;/h1&gt;
+
+&lt;!-- With the JSON formatted like this: 
+{
+  &quot;home&quot;: {
+    &quot;welcomeMessage&quot;: &quot;Welcome!&quot;
+  }
+}
+ --&gt;
+</code></pre>
+
+<p>Knowing our expected behaviour, it seems that we need a reactive mechanism accessible from any component in our application. We can manage this by using a global store, but how to implement it in Svelte? Heck, what is a global store?</p>
+
+<h3>Read the fantastic manual!</h3>
+
+<p>Leaving the Svelte world for a paragraph or two, a store can be seen as a way to manage reactive data outside of a component. It is especially useful when a lot of components share logic for a given matter.</p>
+
+<p>Take the connected user management for instance. You may have one component managing the authentication process, another one responsible for the display of the connected user information, another one who takes care of editing the profile, etc. They all play with the same data and they need to be informed when this piece of data changes to update themselves accordingly.</p>
+
+<p>This is where you could be tempted to create a <code>user</code> store. I am too, so let us create it!</p>
+
+<p>Svelte provide us with a module for creating stores. We can create:</p>
+
+<ul>
+<li><a href="https://svelte.dev/docs#readable"><em>readable stores</em></a>: See them as read-only stores. I have no use case for them by now, but they must be useful since they are available 🤷‍♀️</li>
+<li><a href="https://svelte.dev/docs#writable"><em>writable stores</em></a>: &ldquo;Classical&rdquo; stores, offering us ways to subscribe and unsubscribe to the data&rsquo;s changes and methods to actually modify the data.</li>
+<li><a href="https://svelte.dev/docs#derived"><em>derived stores</em></a>: A store based on other stores. We will see a specific use case for our i18n mechanism.</li>
+</ul>
+
+<p>Here is a minimalist <code>user</code> store:</p>
+
+<pre><code class="language-js">import { writable } from 'svelte/store';
+
+export const user = writable({});
+</code></pre>
+
+<p>I warned you, it is minimalist. Here is how you can consume and change this store&rsquo;s data:</p>
+
+<pre><code class="language-svelte">&lt;script&gt;
+  import { user } from 'path/to/user/store'
+  
+  let username 
+  user.subscribe(newUserInformation =&gt; {
+    username = newUserInformation.name
+  });
+
+  // Can be called when typing the name in an input for instance
+  user.set({ name: 'Thomas Ferro' });
+&lt;/script&gt;
+
+&lt;h1&gt;Welcome {username}!&lt;/h1&gt;
+</code></pre>
+
+<p>Subscribing to a store can seem like a lot of busy work with this method. Svelte also provide a way to subscribe with a shortcut, prefixing your store name with <code>$</code>:</p>
+
+<pre><code class="language-svelte">&lt;script&gt;
+  import { user } from 'path/to/user/store'
+&lt;/script&gt;
+
+&lt;h1&gt;Welcome {$user &amp;&amp; $user.name}!&lt;/h1&gt;
+</code></pre>
+
+<p>The complete API can be found, as always, in the <a href="https://svelte.dev/docs#svelte_store">documentation</a>.</p>
+
+<p>Here is one extra feature that I enjoy a lot: any object with a correctly implemented <code>.subscribe</code> and <code>.unsubscribe</code> and optionally <code>.set</code> methods can be considered as a store by Svelte. Kudo for being able to create a framework-agnostic module.</p>
+
+<p>However, for the sake of simplicity and brevity, we will use the provided methods to create our stores.</p>
+
+<h3>Finally building something</h3>
+
+<p>We know what we want to build, we know how we are going to build it&hellip; Time to code!</p>
+
+<p>The first thing we want is a store with the labels for the current locale. We can manage this by creating a <em>writable store</em> with the labels and a method changing this store&rsquo;s data according to the new locale:</p>
+
+<pre><code class="language-js">import { derived, writable } from 'svelte/store';
+import enLabels from './en.json';
+import frLabels from './fr.json';
+
+const labelsStore = writable(enLabels);
+
+export const EN_LOCALE = &quot;en&quot;;
+export const FR_LOCALE = &quot;fr&quot;;
+export let currentLocale = EN_LOCALE;
+
+export const changeLocale = (newLocale) =&gt; {
+    if (newLocale === EN_LOCALE) {
+        labelsStore.set(enLabels)
+        currentLocale = newLocale
+    } else if (newLocale === FR_LOCALE) {
+        labelsStore.set(frLabels)
+        currentLocale = newLocale
+    }
+}
+</code></pre>
+
+<p>One could use these exposed method and constants to make a local switcher:</p>
+
+<pre><code class="language-svelte">&lt;script&gt;
+  import { changeLocale, EN_LOCALE, FR_LOCALE } from './i18n';
+&lt;/script&gt;
+
+&lt;button on:click={() =&gt; changeLocale(FR_LOCALE)}&gt;🇫🇷&lt;/button&gt;
+&lt;button on:click={() =&gt; changeLocale(EN_LOCALE)}&gt;🇬🇧&lt;/button&gt;
+</code></pre>
+
+<p>As explained in the description of the targeted API, I do not want the developers to directly access the <code>labelsStore</code>. Instead, I want them to use an exposed method and provide a translation key.</p>
+
+<p>How can we expose this store in a way that fits our expected API? Using a <strong>derived store</strong>! This derived store will be called <code>i18n</code> and will not return directly an object with the labels, but a function that takes the translation key as an argument and return the label:</p>
+
+<pre><code class="language-js">import { derived, writable } from 'svelte/store';
+
+// [...] labelsStore implementation
+
+export const i18n = derived(labelsStore, (labelsForCurrentLocale) =&gt; {
+    return key =&gt; labelsForCurrentLocale[key]
+})
+</code></pre>
+
+<p>This way, when the <code>labels</code> <em>store</em> is updated, the <code>i18n</code> derived store is notified and update itself too, making the components who depends on it refresh their templates.</p>
+
+<p>We now need to manage the nested objects. We can extract this logic and use it directly in the method returned by the <code>i18n</code> store:</p>
+
+<pre><code class="language-js">import { derived, writable } from 'svelte/store';
+import enLabels from './en.json';
+import frLabels from './fr.json';
+
+const labelsStore = writable(enLabels);
+
+const OBJECT_PROPERTY_SEPARATOR = &quot;.&quot;
+
+const crawlLabelsToFindRequestedTranslation = (currentLabels, translationKey) =&gt; {
+    const pathToFollowInLabels = translationKey.split(OBJECT_PROPERTY_SEPARATOR)
+    let currentPositionInLabels = currentLabels
+    for (let i = 0; i &lt; pathToFollowInLabels.length; i++) {
+        currentPositionInLabels = currentPositionInLabels[pathToFollowInLabels[i]]
+        if (!currentPositionInLabels) {
+            return translationKey
+        }
+    }
+    return currentPositionInLabels
+}
+
+export const i18n = derived(labelsStore, (labelsForCurrentLocale) =&gt; {
+    return (translationKey) =&gt; {
+        if (!translationKey.includes(OBJECT_PROPERTY_SEPARATOR)) {
+            return labelsForCurrentLocale[translationKey] || translationKey
+        }
+        return crawlLabelsToFindRequestedTranslation(labelsForCurrentLocale, translationKey)
+    }
+})
+</code></pre>
+
+<p>There we go, our i18n is fully implemented, let us use it in a component 😃</p>
+
+<pre><code class="language-svelte">&lt;script&gt;
+  import { i18n } from './i18n';
+
+  // A localized message injected in the script
+  $: authenticationErrorMessage = $i18n('authenticationError')
+&lt;/script&gt;
+
+&lt;!-- A localized message directly called from the template --&gt;
+&lt;h1&gt;{$i18n('welcomeMessage')}&lt;/h1&gt;
+
+&lt;p&gt;{authenticationErrorMessage}&lt;/p&gt;
+</code></pre>
+
+<p>Notice the slight difference in the usage, we need to prefix the store&rsquo;s call with a <code>$</code> to directly access the value and for this value to be reactive. See the <a href="https://svelte.dev/docs#4_Prefix_stores_with_$_to_access_their_values">documentation</a> for more details on that matter.</p>
+
+<h2>Possible next steps</h2>
+
+<p>I do not think that I will continue to work specifically on the i18n mechanism since it already covers everything I needed in my application.</p>
+
+<p>However, they are some possible improvements and new features.</p>
+
+<p>I think that it could be great to manage the pluralization and the translation with parameters. For instance, when a translation takes a parameter that won&rsquo;t go in the same place for different languages.</p>
+
+<p>A dynamic local management could add value too, so the core of the mechanism won&rsquo;t change when adding new managed language.</p>
+
+<p>And of course, one could think that this mechanism could be a standalone library 😬</p>
+
+<h2>A last word</h2>
+
+<p>I learned a lot while building this i18n mechanism and writing this article. I think that it is the best kind of learning, picking a specific subject only when you actually need it. I do not have the time not the will to go through the entire Svelte documentation and make a project that mixes all of the framework&rsquo;s features.</p>
+
+<p>I hope that you discovered something too!</p>
+
+<p>Localization is a common need for a lot of applications. I think that it would be a blast to have the communities of every front-end frameworks work together on a framework-agnostic reactive internationalization mechanism, don&rsquo;t you? 😃</p>
+</main>
+</body>
+</html>

@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coding Dojo - Clean Code - SOLID - Thomas Ferro</title>
+    <link rel="stylesheet" href="/assets/styles/font.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/main.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/title.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/list.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/blockquote.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/figure.css" type="text/css">
+</head>
+<body>
+    <header><a href="/">Thomas Ferro</a></header>
+    <main><h1>Coding Dojo - Clean Code - SOLID</h1>
+
+<blockquote>
+<p>An introduction to Clean Code / Architecture in disguise.</p>
+</blockquote>
+
+<p>A Coding Dojo based on the universe of Metal Gear Solid. Five exercises will be presented to introduce the principles behind the SOLID acronym.</p>
+
+<p>This article is a concatenation of all of the Coding Dojo parts. You can follow the dojo by reading through the post or via the <a href="https://github.com/ThomasFerro/dojo-clean-code-solid">GitHub repository</a>.</p>
+
+<h2>Introduction</h2>
+
+<p><strong>Transmission received&hellip;</strong></p>
+
+<pre><code>Snake, we need your help.
+
+Our agent management system has been compromised and we are trying to rebuild another one in Node.js.
+
+The system is used to keep track of all of our agents and their missions. No big deal for a clean coder like you, am I right ?
+
+We are almost done, but something is missing, like if we were building the project without thinking of the maintainability, flexibility and understandability...
+
+Your goal is to find the project's flaws and eliminate them. Our first analysis has shown that there is one of them per principle behind the SOLID acronym, whatever it means.
+</code></pre>
+
+<p>Follow the instructions and try to complete the exercises so you will have a proper introduction to the Clean Code / Clean Architecture as instructed by Uncle Bob !</p>
+
+<p>For each section, you will have to checkout into the git branch with a flaw to fix. There is no perfect solution to those problems, try your best to clean the code but do not spend to much time scratching your head.</p>
+
+<p>A branch with a solution is provided for every exercise, feel free to compare it with your own !</p>
+
+<p>I highly recommend you to read &ldquo;Clean Architecture: A Craftsman&rsquo;s Guide to Software Structure and Design&rdquo; by Robert C. Martin after you completed the dojo. It contains a deeper dive into the SOLID principles and many more.</p>
+
+<h2>Dojo</h2>
+
+<h3>Single Responsibility Principle</h3>
+
+<blockquote>
+<p>&ldquo;A class should have only one reason to change.&rdquo; Robert C. Martin.</p>
+</blockquote>
+
+<p>Think of the last time you tried to debug that particular method that was responsible of :</p>
+
+<ol>
+<li>Checking if there is enough coffee and water left;</li>
+<li>Prepare the coffee if the first condition is fulfilled;</li>
+<li>Pour the coffee and the milk if necessary;</li>
+<li>Add sugar; and</li>
+<li>Notify the user that his coffee is ready !</li>
+</ol>
+
+<p>All of that in the <code>CoffeeService</code> !</p>
+
+<p>Now, imagine a world where all the coffee business is managed by the <code>CoffeeService</code>, the sugar business by the <code>SugarService</code>, and so on..</p>
+
+<p>Wouldn&rsquo;t it be nice ? Easily testable and debuggable ?</p>
+
+<p>This is the philosophy behind the <strong>Single Responsibility Principle</strong>, every part of the code should be responsible for one thing and it should be very talented at doing it !</p>
+
+<p><strong>Transmission received&hellip;</strong></p>
+
+<pre><code>Snake, we have found your first target.
+
+This is a common case of a junk room class ! Clean it by making sure that the responsibilities are at the right place.
+</code></pre>
+
+<h4>Exercise</h4>
+
+<p>Checkout into the <code>exercise-1</code> branch.</p>
+
+<p>Try to clean up the <code>addMission</code> in the <code>MissionsService</code> by splitting the responsabilities in different classes.</p>
+
+<pre><code>    public async addMission(mission: Mission): Promise&lt;boolean&gt; {
+        if (!mission
+            || !mission.getId() ||
+            !isAgentValid(mission.getAgent()) ||
+            !mission.getStartDate()
+        ) {
+            throw new InvalidMission(mission);
+        }
+
+        if (getMissionWithinPeriod(
+            await this.getAgentMissions(mission.getAgent().getId()),
+            mission.getStartDate(),
+            mission.getEndDate(),
+        )) {
+            throw new MissionConflict(mission);
+        }
+
+        return await this.missionsRepository.add(mission);
+    }
+</code></pre>
+
+<p>You will find a solution to this exercise in the <code>exercise-1-solution</code> branch.</p>
+
+<h4>Solution</h4>
+
+<p>In order to simplify the <code>MissionsService</code>, I have created a class responsible for the policies linked to a mission.</p>
+
+<p>Here, this <code>MissionPolicies</code> class exposes two pure methods: <code>isMissionValid</code> and <code>hasAlreadyAMissionWithinThisPeriod</code>.</p>
+
+<pre><code>export const isMissionValid = (mission: Mission): boolean =&gt; {
+    return !!(mission &amp;&amp; mission.getId() &amp;&amp; isAgentValid(mission.getAgent()) &amp;&amp; mission.getStartDate());
+};
+
+export const hasAlreadyAMissionWithinThisPeriod = (
+    agentMissions: Mission[],
+    newMission: Mission,
+): boolean =&gt; {
+    return getMissionWithinPeriod(
+        agentMissions,
+        newMission.getStartDate(),
+        newMission.getEndDate(),
+    ) !== undefined;
+};
+</code></pre>
+
+<p>The <code>MissionsService</code> can then focus on his primary responsability, and simply call the policies when needed.</p>
+
+<pre><code>    public async addMission(mission: Mission): Promise&lt;boolean&gt; {
+        if (!isMissionValid(mission)) {
+            throw new InvalidMission(mission);
+        }
+
+        if (hasAlreadyAMissionWithinThisPeriod(
+            await this.getAgentMissions(mission.getAgent().getId()),
+            mission,
+        )) {
+            throw new MissionConflict(mission);
+        }
+
+        return await this.missionsRepository.add(mission);
+    }
+</code></pre>
+
+<h3>Open / Closed Principle</h3>
+
+<blockquote>
+<p>&ldquo;A class is closed, since it may be compiled, stored in a library, baselined, and used by client classes. But it is also open, since any new class may use it as parent, adding new features. When a descendant class is defined, there is no need to change the original or to disturb its clients.&rdquo; Bertrand Meyer.</p>
+</blockquote>
+
+<p>This is one of the most important principle, if you want to be able to make your application grow.</p>
+
+<p>To paraphrase Bertrand Meyer, the goal is to build an application when a new feature will take the form of a new class, a new method or a new module, while leaving the rest of the application untouched.</p>
+
+<p>To apply this principle efficiently, you must already have a modular application, respecting the <strong>Single Responsability Principle</strong>.</p>
+
+<p>To put it in context, let&rsquo;s take back our <strong>CoffeeService</strong> example. What if we want to be able to serve tea as well ?</p>
+
+<p>One could rush the making of this feature by adding a parameter with the type of drink and surround the treatment in a big and dirty <code>if</code>&hellip; But not us !</p>
+
+<p>We can, for instance, make a new <code>TeaService</code> with the specific treatment, and make both this service and the coffee one implements the <code>DrinkService</code>, providing the necessary API.</p>
+
+<pre><code>Well done with the previous mess !
+
+Now, if we want to be able to add more specificities to the project, we will need to rethink our classes strategy.
+</code></pre>
+
+<h4>Exercise</h4>
+
+<p>Checkout into the <code>exercise-2</code> branch.</p>
+
+<p>We have add a new feature, the missions with backup. These are just an extension of the previous missions, but with a list of agents that can be used as backup.</p>
+
+<p>Unfortunately, we rushed the feature and now with have a messy <code>MissionsService</code>.</p>
+
+<p>Try to clean it by putting all of the <code>BackedMission</code> specifics in an extension of the <code>MissionsService</code>.</p>
+
+<pre><code>export class MissionsService {
+    private missionsRepository: InMemoryMissionsRepository;
+    private backedMissionsRepository: BackedMissionsRepository;
+
+    constructor(missionsRepository: InMemoryMissionsRepository, backedMissionsRepository: BackedMissionsRepository) {
+        this.missionsRepository = missionsRepository;
+        this.backedMissionsRepository = backedMissionsRepository;
+    }
+
+    // [...]
+
+    public async getAllBackedMissions(): Promise&lt;Mission[]&gt; {
+        return await this.backedMissionsRepository.findAll();
+    }
+
+    public async getAgentBackedMissions(agentId: string): Promise&lt;Mission[]&gt; {
+        return await this.backedMissionsRepository.findByAgent(agentId);
+    }
+
+    public async getBackedMissionInformation(missionId: string): Promise&lt;BackedMission | undefined&gt; {
+        return await this.backedMissionsRepository.findById(missionId);
+    }
+
+    public async removeBackupFromMission(mission: BackedMission, backupId: string): Promise&lt;boolean&gt; {
+        if (!isAgentInBackup(backupId, mission)) {
+            return false;
+        }
+
+        return this.backedMissionsRepository.removeBackup(mission.getId(), backupId);
+    }
+}
+</code></pre>
+
+<p>You will find a solution to this exercise in the <code>exercise-2-solution</code> branch.</p>
+
+<h4>Solution</h4>
+
+<p>To solve this issue and make the extension of the application more straightforward, I have added a <code>BackedMissionsService</code> that extends the <code>MissionsService</code>.</p>
+
+<p>This new class is responsible for the providing an API used to manage specifically the missions with backup. This way, backward compatibility is kept clean.</p>
+
+<pre><code>export class BackedMissionsService extends MissionsService {
+    private backedMissionsRepository: BackedMissionsRepository;
+
+    constructor(backedMissionsRepository: BackedMissionsRepository) {
+        super(backedMissionsRepository);
+
+        this.backedMissionsRepository = backedMissionsRepository;
+    }
+
+    public async getBackedMissionInformation(missionId: string): Promise&lt;BackedMission | undefined&gt; {
+        return await this.backedMissionsRepository.findById(missionId);
+    }
+
+    public async removeBackupFromMission(mission: BackedMission, backupId: string): Promise&lt;boolean&gt; {
+        if (!isAgentInBackup(backupId, mission)) {
+            return false;
+        }
+
+        return this.backedMissionsRepository.removeBackup(mission.getId(), backupId);
+    }
+}
+</code></pre>
+
+<p>However, I found this way of keeping the classes open redundant. To make this new feature, I had to add :</p>
+
+<ul>
+<li>A new set of helpers;</li>
+<li>A new repository;</li>
+<li>A new implementation of this repository.</li>
+</ul>
+
+<h3>Liskov Substitution Principle</h3>
+
+<blockquote>
+<p>&ldquo;Let φ(x) be a property provable about objects x of type T. Then φ(y) should be true for objects y of type S where S is a subtype of T.&rdquo; Barbara Liskov.</p>
+
+<p>&ldquo;Functions that use pointers of references to base classes must be able to use objects of derived classes without knowing it.&rdquo; Robert C. Martin.</p>
+</blockquote>
+
+<p>This is, in my opinion, the most complicated of the five principles.</p>
+
+<p>Try to think of it this way :</p>
+
+<ol>
+<li>You should never strengthened preconditions in a subtype. Meaning that if you extends the <code>CoffeeService</code> class with a <code>pourCoffee</code> method, this method in your subclass should accept the same arguments as the original.</li>
+<li>You should never weakened postconditions in a subtype. Meaning that if the method in the parent class have a condition that throws an error, the same error should be thrown in every subclasses.</li>
+</ol>
+
+<p>This way, there is no need to do specific validation when calling the <code>pourCoffee</code> method, whether it is from the <code>CoffeeService</code> itself one or his subclasses.</p>
+
+<pre><code>Still with us ? We need you more than ever with this issue.
+
+The project act oddly depending on the implementation, no matter how precise the API is..
+
+Spot the weak substitution and clear it, so we can move on.
+</code></pre>
+
+<h4>Exercise</h4>
+
+<p>Checkout into the <code>exercise-3</code> branch.</p>
+
+<p>The team has decided to add a new condition for creating a mission with backup.</p>
+
+<p>This condition is that there must be at least one of those backups.</p>
+
+<p>The first implementation seems to fulfill this requirement, adding a <code>BackedMission</code> with no backup throws an <code>InvalidMission</code> exception.</p>
+
+<pre><code>export class BackedMissionsService extends MissionsService {
+    private backedMissionsRepository: BackedMissionsRepository;
+
+    constructor(backedMissionsRepository: BackedMissionsRepository) {
+        super(backedMissionsRepository);
+
+        this.backedMissionsRepository = backedMissionsRepository;
+    }
+
+    public async addMission(mission: BackedMission): Promise&lt;boolean&gt; {
+        if (!hasBackup(mission)) {
+            throw new InvalidMission(mission);
+        }
+
+        return super.addMission(mission);
+    }
+    // [...]
+}
+</code></pre>
+
+<p>You may have noticed the violation here : The same entity doest not behave the same while being added in the <code>MissionsService</code> or in the <code>BackedMissionsService</code>. Thus, we cannot substitue those classes, even if <code>BackedMissionsService</code> extends <code>MissionsService</code>.</p>
+
+<p>Try to find a way to fix this violation but do not wait too much before reading the solution, and please share with me your solution or your feeling about mine.</p>
+
+<p>You will find a solution to this exercise in the <code>exercise-3-solution</code> branch.</p>
+
+<h4>Solution</h4>
+
+<p>I could not find a suitable solution for this specific problem without letting the <code>MissionsService</code> know about the <code>BackedMission</code>.</p>
+
+<p>Knowing this, and the fact that the new domain rule (no backed mission without backup) is specific to the <code>BackedMissionsService</code>, I have decided to create a whole new method, <code>addBackedMission</code>, that checks this rule.</p>
+
+<pre><code>    public async addBackedMission(mission: BackedMission): Promise&lt;boolean&gt; {
+        if (!hasBackup(mission)) {
+            throw new InvalidMission(mission);
+        }
+
+        return super.addMission(mission);
+    }
+</code></pre>
+
+<h3>Interface Segregation Principle</h3>
+
+<blockquote>
+<p>&ldquo;The interface-segregation principle (ISP) states that no client should be forced to depend on methods it does not use.&rdquo; Robert C. Martin.</p>
+
+<p>&ldquo;ISP splits interfaces that are very large into smaller and more specific ones so that clients will only have to know about the methods that are of interest to them. Such shrunken interfaces are also called role interfaces.&rdquo; Wikipedia.</p>
+</blockquote>
+
+<p>Just like the <em>Liskov Substitution Principle</em>, the <strong>Interface Segregation Principle</strong> helps for a more maintainable application.</p>
+
+<p>To stay with the coffee example, imagine that you have a <code>DrinkService</code> that expose three method :</p>
+
+<ul>
+<li><code>fillWater</code></li>
+<li><code>pourDrink</code></li>
+<li><code>doMaintenance</code></li>
+</ul>
+
+<p>The <strong>Interface Segregation Principle</strong> says that you should segregate these operation in <em>role interfaces</em>. So you will have three interfaces that all uses the <code>DrinkService</code> for a different purpose :</p>
+
+<ul>
+<li><code>WaterFillerService</code> with a <code>fillWater</code> method exposed</li>
+<li><code>DrinkPourerService</code> with a <code>pourDrink</code> method exposed</li>
+<li><code>MaintenanceService</code> with a <code>doMaintenance</code> method exposed</li>
+</ul>
+
+<p>This way, a <code>WaterFillerService</code>&rsquo;s client will not depend on any of the maintenance business.</p>
+
+<pre><code>The previous mission was the most difficult, keep on cleaning !
+
+A lot of integrators expressed their frustration about our API. They keep telling us that there is way too much useless things to implement, even unnecessary methods...
+</code></pre>
+
+<h4>Exercise</h4>
+
+<p>Checkout into the <code>exercise-4</code> branch.</p>
+
+<p>Our engineers are working on a new feature, the possibility to manage the information of the missions&rsquo; locations.</p>
+
+<p>The data will be fetched from a <code>Repository</code>, but they need to be able to delete elements from this repository.</p>
+
+<p>To do so, they have started to add a new <code>delete</code> method.</p>
+
+<pre><code>export interface Repository&lt;T, K&gt; {
+    add(element: T): Promise&lt;boolean&gt;;
+    findAll(): Promise&lt;T[]&gt;;
+    findById(id: K): Promise&lt;T | undefined&gt;;
+    delete(id: k): Promise&lt;boolean&gt;;
+}
+</code></pre>
+
+<p>As you can imagine, the compiler indicates a lot of error based on this new addition, exemple :</p>
+
+<pre><code>Property 'delete' is missing in type 'InMemoryMissionsRepository' but required in type 'MissionsRepository'
+</code></pre>
+
+<p>It might be due to the fact that the interface holds to many methods !</p>
+
+<p>Split this interface to best suit the new needs of the team.</p>
+
+<p>You will find a solution to this exercise in the <code>exercise-4-solution</code> branch.</p>
+
+<h4>Solution</h4>
+
+<p>I have splitted the <code>Repository</code> into three interfaces. This way, every implementation can choose which action they want to provide, depending on their specifications :</p>
+
+<pre><code>export interface Add&lt;T&gt; {
+    add(element: T): Promise&lt;boolean&gt;;
+}
+
+export interface FindAll&lt;T&gt; {
+    findAll(): Promise&lt;T[]&gt;;
+}
+
+export interface FindById&lt;T, K&gt; {
+    findById(id: K): Promise&lt;T | undefined&gt;;
+}
+</code></pre>
+
+<p>And now, the team can simple add a new <code>delete</code> interface and make their repository implements what they need !</p>
+
+<h3>Dependency Inversion Principle</h3>
+
+<blockquote>
+<p>&ldquo;High level modules should not depend upon low level modules. Both should depend upon abstractions.&rdquo; Robert C. Martin.</p>
+
+<p>&ldquo;Abstractions should not depend upon details. Details should depend upon abstraction.&rdquo; Robert C. Martin.</p>
+</blockquote>
+
+<p>This may be the least expansive principle to apply.</p>
+
+<p>If you are not already convinced that you should always depends on abstraction (abstract classes or interfaces), try to think of the last time you have committed to this specific database, let us say <em>MongoDB</em>.</p>
+
+<p>You build your entire application with explicit references to this provider, using the technology as it&rsquo;s full potential.</p>
+
+<p>Then, right before the shipping, your boss tells you that a contract has been signed with Microsoft to use <em>Microsoft SQL Server</em>, and that you <strong>have to</strong> use this database !</p>
+
+<p>Now you have to search for every <em>MongoDB</em> reference in the codebase, replacing it with the new provider&hellip; And, of course, you have used specific features that is not available in the new provider !</p>
+
+<p>This is a common case where the <strong>Dependency Inversion Principle</strong> can save you hours, even days !</p>
+
+<p>In the previous example, instead of referencing <em>MongoDB</em>, an abstract <strong>Repository</strong> would have been used, later implemented with the chosen provider. This way, changing a provider can be simply done by adding a new implementation, and configure the application to use this one instead.</p>
+
+<pre><code>One last thing to greatly improve our project and you will be free to go.
+
+The team wants to be able to try numerous technical choices before deciding which one to use in production.
+
+To do so, we need to rethink our application to remove any explicit references !
+</code></pre>
+
+<h4>Exercise</h4>
+
+<p>Checkout into the <code>exercise-5</code> branch.</p>
+
+<p>The <code>AgentsService</code> make explicit reference to an implementation of the <code>AgentsRepository</code>. Abstract the used repository.</p>
+
+<pre><code>export class AgentsService {
+    private agentsRepository: InMemoryAgentsRepository;
+
+    constructor(agentsRepository: InMemoryAgentsRepository) {
+        this.agentsRepository = agentsRepository;
+    }
+    // [...]
+}
+</code></pre>
+
+<p>You will find a solution to this exercise in the <code>exercise-5-solution</code> branch.</p>
+
+<h4>Solution</h4>
+
+<p>This exercise was not quite elaborate, it was just a means to talk to you about the principle.</p>
+
+<p>You should always depends on abstraction, even if you are doing a &ldquo;&rdquo;&ldquo;disposable service&rdquo;&ldquo;&rdquo; (spoiler: it will never be disposed).</p>
+
+<p>In this case, the <code>AgentsService</code> should depend on an abstract <code>AgentsRepository</code>.</p>
+
+<p>The only thing that the service should know is that the repository can perform various actions (here: fetching and adding agents) :</p>
+
+<pre><code>export class AgentsService {
+    private agentsRepository: AgentsRepository;
+
+    constructor(agentsRepository: AgentsRepository) {
+        this.agentsRepository = agentsRepository;
+    }
+    // [...]
+}
+</code></pre>
+
+<h2>Conclusion</h2>
+
+<pre><code>Great job Snake, you have managed to tremendously clear the project !
+</code></pre>
+
+<p>I hope that you have enjoyed the trip and that you will apply all of those principles in your work !</p>
+
+<p>Don&rsquo;t hesitate to notice me if you have any observation about the dojo, I will do my best to answer quickly :)</p>
+</main>
+</body>
+</html>

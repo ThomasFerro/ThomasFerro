@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DDD in action: Armadora - The board game - Thomas Ferro</title>
+    <link rel="stylesheet" href="/assets/styles/font.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/main.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/title.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/list.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/blockquote.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/figure.css" type="text/css">
+</head>
+<body>
+    <header><a href="/">Thomas Ferro</a></header>
+    <main><h1>DDD in action: Armadora - The board game</h1>
+
+<blockquote>
+<p>Applying DDD tactical patterns to the making of a game.</p>
+</blockquote>
+
+<p>How do you apply most of the DDD tools when you have no domain experts nor any team at all?</p>
+
+<p>Since I want to train using those tools whenever possible, I decided to build what seems to be a good experience for me: adapting a board game.</p>
+
+<p>The domain rules are simply the game&rsquo;s ones, and discussions with domain experts can be reduced to reading the guide!</p>
+
+<p>However, I can only apply tactical patterns, which is a simplistic take on DDD. The discovery of the domain and the exchanges with domain experts are a critical component of DDD and ignoring it in a real project is nonsensical to me.</p>
+
+<p>Anyway, let me introduce you to the game that I am building!</p>
+
+<h2>Game&rsquo;s rules</h2>
+
+<p><img src="https://github.com/ThomasFerro/readmes/blob/master/posts/12-ddd-in-action-armadora-the-board-game/game_in_progress.jpg" alt="Game in progress" /></p>
+
+<p>Here are the rules, based on the guide. The wording is important since it is already the Ubiquitous Language. No need to work with domain experts to build it in our case. Note that I will be only implementing the basic rules, not the advanced ones.</p>
+
+<p>Armadora is a game where every <strong>player</strong> will try to get their hands on the most <strong>gold</strong> possible.</p>
+
+<p><img src="https://github.com/ThomasFerro/readmes/blob/master/posts/12-ddd-in-action-armadora-the-board-game/board.jpg" alt="Board" /></p>
+
+<p>The <strong>game board</strong> is a 8x5 grid with two types of <strong>cell</strong>: the <strong>lands</strong> where the players will be able to put their <strong>warriors</strong> (more on that later) and the <strong>gold stacks</strong> with various quantity or gold.</p>
+
+<p>The grid can be divided into <strong>territories</strong> by putting <strong>palisades</strong> between cells. A territory <em>must be at least four squares wide</em>.</p>
+
+<p>At the beginning of a game, each player chooses a character (<em>Orc</em>, <em>Goblin</em>, <em>Elf</em> or <em>Mage</em>) and hide their warriors behind their screens.</p>
+
+<p>Each player starts with the same army, depending on the number of players:</p>
+
+<ul>
+<li>For two players, each one get <em>11 warriors of 1 point</em>, <em>2 warriors of 2 points</em>, <em>1 warrior of 3 points</em>, <em>1 warrior of 4 points</em> and <em>1 warrior of 5 points</em>;</li>
+<li>For three players, each one get <em>7 warriors of 1 point</em>, <em>2 warriors of 2 points</em>, <em>1 warrior of 3 points</em> and <em>1 warrior of 4 points</em>;</li>
+<li>For four players, each one get <em>5 warriors of 1 point</em>, <em>1 warrior of 2 points</em>, <em>1 warrior of 3 points</em> and <em>1 warrior of 4 points</em>;</li>
+</ul>
+
+<p>In the advanced rules set, the players also have power token based on their race and a reinforcement token.</p>
+
+<p><em>Forty gold</em> are then distributed randomly in eight piles: 1 pile of 3, 2 piles of 4, 2 piles of 5, 2 piles of 6 and 1 pile of 7.</p>
+
+<p>When it is his turn, the player have to choose one of the following actions:</p>
+
+<ul>
+<li>Put one of a remaining warrior tile on an empty cell, with the number hidden;</li>
+<li>Put <strong>one or two palisades</strong> on the board, in an authorized border of a cell (one cannot put a palisade if it closes a territory of less than four cells);</li>
+<li>Use the race&rsquo;s power (only in advanced rules);</li>
+<li>Use reinforcement (only in advanced rules);</li>
+<li>Pass his turn.</li>
+</ul>
+
+<p>Once a player passed his turn, he cannot play anymore for the rest of the game.</p>
+
+<p>The game ends once every player has passed they turn. Every armies&rsquo; strength is revealed and the gold of each territory is given to the player with the greatest army.</p>
+
+<p><img src="https://github.com/ThomasFerro/readmes/blob/master/posts/12-ddd-in-action-armadora-the-board-game/end_of_a_game.jpg" alt="End of a game" /></p>
+
+<p>In case of a tie, the players will compare their piles of gold, from highest to lowest.</p>
+
+<p>Example: If the Elf have a pile of 6, a pile of 4 and a pile of 3 and the Orc have a pile of 6, one of 5 and one of 2, the Orc wins.</p>
+
+<p>In a four-player game, the facing players can play as partners. We will not be implementing this feature in the first version.</p>
+
+<h2>Building the game</h2>
+
+<p>Now that the <em>what</em> is clear, we can focus on the <em>how</em>.</p>
+
+<p>The game is implemented as a Go application, serving the information to the clients via an HTTP API and Web Sockets. These choices can and will be challenged later, but the first thing to focus on is the domain.</p>
+
+<p>Every piece of code regarding the domain is written following the <strong>Test Driven Development</strong> principles. This way, I will be sure that every vital piece of the game is tested and functional.</p>
+
+<p>The infrastructure matters are not tested at first, which I regret, but it was the most challenging part for me to do. Being a Go and especially a Web Sockets newbie, writing testable code for this part felt unnatural and I wanted to focus on delivering the value. However, as we will see in the last section, all of this layer will be re-written to be easily deployable.</p>
+
+<p>On a brighter side, let us talk architecture. As the project is turn-based, it felt natural for me to build the game as an <em>event driven</em> system. We have a <em>Game</em> aggragate, on which domain events are applied to modify its state. We will see examples of events throughout the post. The main idea is to persist the way that lead to the current state of the system instead of the state itself.</p>
+
+<p>The <em>events</em>, <em>commands</em>, <em>aggregates</em> and <em>structures</em> are based on the guide, which provides the <em>ubiquitous language</em>.</p>
+
+<p>I choose not to apply <em>CQRS</em> patterns for now since there is no need to decorrelate the <em>command</em> and the <em>query</em> models. Again, this choice can be challenged.</p>
+
+<p>Before diving into the game&rsquo;s implementation, let me first introduce the main concepts that we will see through the article.</p>
+
+<h3>Concepts</h3>
+
+<p><strong>Domain events</strong> help us understand what happened in the system. They contain information about what happened via their type and their inner data.</p>
+
+<p>I decided to create non-technical <em>error events</em> in order to keep a log of unwanted things happening. In practice, this means that an invalid move will produce a domain event.</p>
+
+<p>The main part of the domain is the <strong>aggregate</strong>. There is only one here, the <em>Game</em>, on which domain events will be applied in order to modify his state.</p>
+
+<p><strong>Interactions</strong> with the domain and more specifically the aggregate are achieved using <strong>commands</strong>.</p>
+
+<p>For instance, a player will make a move via a command. This command will receive the <em>history of domain events</em> for the game and a <em>payload</em>. If needed, an aggregate can be built using the history and decisions can be made using the game&rsquo;s state. In the end, the command will return <strong>the new domain events</strong> that occurred on the aggregate.</p>
+
+<pre><code class="language-go">func SampleCommand(history []event.Event, commandPayload CommandPayload) []event.GameCreated {
+    currentStateOfTheGame := game.ReplayHistory(history)
+    // [...] Decisions based on the current state of the game.
+    return []event.Event{
+        event.AnEvent{
+            // Payload
+        },
+        event.AnotherEvent{},
+    }
+}
+</code></pre>
+
+<p>Those concepts and more are also introduced in my <a href="https://dev.to/thomasferro/summary-of-a-four-days-ddd-training-5a3c">feedback on the four days DDD training that I followed last year</a>.</p>
+
+<p>I will now briefly iterate through the different parts of the domain, explaining how I implemented them.</p>
+
+<h3>Initialization of a game</h3>
+
+<p>This first part will introduce many of the building blocks of the application, while implementing the setup of a game.</p>
+
+<p>The initial command is the one used to create a game, the aptly named <code>CreateGame</code>. No big deal here, just a method that returns a <code>GameCreated</code> event.</p>
+
+<pre><code class="language-go">func CreateGame() event.GameCreated {
+	return event.GameCreated{}
+}
+</code></pre>
+
+<p>We need a mechanism to be able to create a <em>Game</em> aggregate based on a history of events. Using a <em>loop</em> and a <em>type switch</em>, we will route the event to the right method on the aggregate.</p>
+
+<pre><code class="language-go">func ReplayHistory(history []event.Event) Game {
+	var returnedGame Game
+	returnedGame = game{}
+	for _, nextEvent := range history {
+		switch typedEvent := nextEvent.(type) {
+		case event.GameCreated:
+            returnedGame = returnedGame.ApplyGameCreated(typedEvent)
+        // [...] One case per managed event type
+		}
+	}
+	return returnedGame
+}
+</code></pre>
+
+<p>The <code>ApplyGameCreated</code> simply changes the game&rsquo;s state, making it waiting for players to join.</p>
+
+<pre><code class="language-go">func (g game) ApplyGameCreated(event event.GameCreated) Game {
+	g.state = WaitingForPlayers
+	return g
+}
+</code></pre>
+
+<p>Note that every <code>Apply</code> method return a new aggregate, to avoid side-effect.</p>
+
+<p>Now that we have a game, we need to provide a way for players to join it. Another command will do the trick: <code>JoinGame</code>. This command, contrary to the previous one, needs a little bit of context provided by the payload.</p>
+
+<pre><code class="language-go">type JoinGamePayload struct {
+	Nickname  string
+	Character character.Character
+}
+</code></pre>
+
+<p>For the command to be fulfilled, the game needs to be in the right state, the game must not be already full and the character must not have been already taken:</p>
+
+<pre><code class="language-go">func JoinGame(history []event.Event, joinGamePayload JoinGamePayload) []event.Event {
+	gameToJoin := game.ReplayHistory(history)
+
+	if gameToJoin.State() != game.WaitingForPlayers {
+		return []event.Event{
+			event.GameAlreadyStarted{},
+		}
+	}
+
+	if len(gameToJoin.Players()) == 4 {
+		return []event.Event{
+			event.GameAlreadyFull{},
+		}
+	}
+
+	for _, player := range gameToJoin.Players() {
+		if player.Character() == joinGamePayload.Character {
+			return []event.Event{
+				event.CharacterAlreadyChosen{
+					Character: joinGamePayload.Character,
+				},
+			}
+		}
+	}
+
+	return []event.Event{
+		event.PlayerJoined{
+			Nickname:  joinGamePayload.Nickname,
+			Character: joinGamePayload.Character,
+		},
+	}
+}
+</code></pre>
+
+<p>You have here examples of error events. I could have decided to implement them as returned error, but it felt more declarative this way. Another implementation choice that will certainly be challenged later.</p>
+
+<p>Once two to four players joined the game, it can be started via the <em><code>StartTheGame</code> command</em>.</p>
+
+<p>The first thing to do is to check if there is enough players:</p>
+
+<pre><code class="language-go">func StartTheGame(history []event.Event) []event.Event {
+	newGame := game.ReplayHistory(history)
+
+	if len(newGame.Players()) &lt; 2 {
+		return []event.Event{
+			event.NotEnoughPlayers{
+				NumberOfPlayers: len(newGame.Players()),
+			},
+		}
+    }
+
+    // [...]
+</code></pre>
+
+<p>When the game starts, the gold, palisades and warriors are distributed. How to represent that? With domain events!</p>
+
+<p>The <code>StartTheGame</code> command can be completed with those events as following:</p>
+
+<pre><code class="language-go">func StartTheGame(history []event.Event) []event.Event {
+	newGame := game.ReplayHistory(history)
+
+	if len(newGame.Players()) &lt; 2 {
+		return []event.Event{
+			event.NotEnoughPlayers{
+				NumberOfPlayers: len(newGame.Players()),
+			},
+		}
+	}
+
+	events := []event.Event{}
+
+	warriorsToDistribute := warrior.WarriorsToDistribute(len(newGame.Players()))
+
+	events = append(events, event.WarriorsDistributed{
+		WarriorsDistributed: warriorsToDistribute,
+	})
+
+	goldStacksToDistribute := gold.GoldToDistribute()
+
+	events = append(events, event.GoldStacksDistributed{
+		GoldStacks: goldStacksToDistribute,
+	})
+
+	events = append(events, event.PalisadesDistributed{
+		Count: 35,
+	})
+
+	return append(events, event.GameStarted{})
+}
+</code></pre>
+
+<p>The <code>WarriorsToDistribute</code> and <code>GoldToDistribute</code> methods are extracted in another package for the sake of readability and because it is out of the command&rsquo;s responsibility.</p>
+
+<p>Those events, when applied in the aggregate, put the game in the right state:</p>
+
+<pre><code class="language-go">func (g game) ApplyGameStarted(event event.GameStarted) Game {
+	g.state = Started
+	return g
+}
+
+func (g game) ApplyWarriorsDistributed(event event.WarriorsDistributed) Game {
+	players := []Player{}
+	for _, player := range g.Players() {
+		players = append(players, player.SetWarriors(event.WarriorsDistributed))
+	}
+	g.players = players
+	return g
+}
+
+func (g game) ApplyGoldStacksDistributed(event event.GoldStacksDistributed) Game {
+	g.board = board.NewBoard(event.GoldStacks)
+	return g
+}
+
+func (g game) ApplyPalisadesDistributed(event event.PalisadesDistributed) Game {
+	g.board = g.Board().SetPalisadesLeft(event.Count)
+	return g
+}
+</code></pre>
+
+<p>I made the <code>player</code>&rsquo;s <code>SetWarriors</code> and the <code>board</code>&rsquo;s <code>SetPalisadesLeft</code> methods to return a new instance that is why I reassign them to the game before returning it.</p>
+
+<p>Now that the game is started, it is time for the players to actually play!</p>
+
+<h3>Anatomy of a turn</h3>
+
+<p>In standard rules, three actions are available: put a warrior on a land, put one or two palisades between cells or pass the turn.</p>
+
+<p>Those three commands have two things in common. They can only be done by the current player, which is checked with the following assertion:</p>
+
+<pre><code class="language-go">	currentGame := game.ReplayHistory(history)
+
+	if currentGame.CurrentPlayer() != commandPayload.Player {
+		return []event.Event{
+			event.NotThePlayerTurn{
+				PlayerWhoTriedToPlay: commandPayload.Player,
+			},
+		}
+    }
+    // [...]
+</code></pre>
+
+<p>They also all share the fact that the turn of the player ends after the command is handled. This is represented by the <code>NextPlayer</code> event.</p>
+
+<p>Going to the more specific stuff, the <code>PutWarrior</code> command must check that the player have warrior of the requested strength left and that the cell is an empty land.</p>
+
+<pre><code class="language-go">func PutWarrior(history []event.Event, payload PutWarriorPayload) []event.Event {
+	currentGame := game.ReplayHistory(history)
+
+	if currentGame.CurrentPlayer() != payload.Player {
+		return []event.Event{
+			event.NotThePlayerTurn{
+				PlayerWhoTriedToPlay: payload.Player,
+			},
+		}
+	}
+
+	currentPlayer := currentGame.Players()[currentGame.CurrentPlayer()]
+
+	if getWarriorsLeft(currentPlayer.Warriors(), payload.Warrior) == 0 {
+		return []event.Event{
+			event.NoMoreWarriorOfThisStrength{
+				Strength: payload.Warrior,
+			},
+		}
+	}
+
+	if cellAlreadyTaken(currentGame.Board(), payload.Position) {
+		return []event.Event{
+			event.CellAlreadyTaken{
+				Position: payload.Position,
+			},
+		}
+	}
+
+	return []event.Event{
+		event.WarriorPut{
+			Player:   payload.Player,
+			Strength: payload.Warrior,
+			Position: payload.Position,
+		},
+		event.NextPlayer{},
+	}
+}
+</code></pre>
+
+<p>The PutPalisades is more complex since it must check the grid&rsquo;s validity after putting the requested palisades. If putting the palisades creates at least on territory of less than 4 cells, the move is invalid.</p>
+
+<p>Those <em>territories</em> matters are extracted in an eponymous package, out of the DDD scope. It is not the piece of code that I am the most proud of, but you can find it on the <a href="https://github.com/ThomasFerro/armadora">project&rsquo;s repository</a>. <em>PR welcomed</em>, as they say!</p>
+
+<p>I am not going into much details about passing a turn, the only notable thing is the <em>end game management</em>. The command needs to check if every player passed they turn, and ends the game if they all did via a <em><code>GameFinished</code> event</em>. This event contains the final score, computed by a <code>territory</code> and a <code>score</code> services. As stated earlier, this is the most complex part of the application, domain insight might help me refactor it later.</p>
+
+<h3>End of a game</h3>
+
+<p>We are almost done with the basic rules! The only missing part is the ability to end the game, and provide a scoreboard.</p>
+
+<p>The guide indicate us that the game ends once every player have passed they turn. We can represent that with a <code>GameFinished</code> event. It has to be checked every time a player pass, so we can add that to the <code>PassTurn</code> command:</p>
+
+<pre><code class="language-go">func nextPlayerOrEndGame(history []event.Event) event.Event {
+	currentGame := game.ReplayHistory(
+		append(history),
+	)
+	for _, player := range currentGame.Players() {
+		if !player.TurnPassed() {
+			return event.NextPlayer{}
+		}
+	}
+
+	territories, _ := board.FindTerritories(currentGame.Board())
+
+	return event.GameFinished{
+		Scores: score.ComputeScores(territories),
+	}
+}
+</code></pre>
+
+<p>Again, the complexity of score computing is extracted in its own package, along with ties management.</p>
+
+<p>The <code>GameFinished</code> event is handled by the game by changing his state and adding the scores:</p>
+
+<pre><code class="language-go">func (g game) ApplyGameFinished(event event.GameFinished) Game {
+	g.state = Finished
+	g.scores = event.Scores
+	return g
+}
+</code></pre>
+
+<p>There we go, three pages of rules implemented following the nomenclature!</p>
+
+<h2>What is next?</h2>
+
+<p>You may have noticed, this article is focused on the domain concerns. As the application was built with agility in mind, every part was delivered with the corresponding front-end client. This front-end is barebones and I still need to build a real responsive Web App with the game&rsquo;s assets before delivering the V1.</p>
+
+<p>Another area of improvement is on the infrastructure part. The Go application is stateful, with the events and the parties stored in memory. These information will need to be extracted in any sort of repository and the application will have to fetch those data on every request. It will make the application Serverles-ready and more easy to deploy.</p>
+
+<p>After that, a <em>continuous delivery</em> pipeline will have to be built to facilitate the first release and the following ones.</p>
+
+<p>I think that there is also some work to be done on the client-server relationship. The client still have too many responsibilities in my opinion, and it would be great for the server to send him available moves for example. Using the right protocol for this turn-base game is also important to me, the persistent connection of the Web Sockets seems exaggerated.</p>
+
+<p>Advances rules are still to be implemented, such as the team-play for four players or the integration of reinforcement and race&rsquo;s powers.</p>
+
+<h2>What to get out of this experience</h2>
+
+<p>It was a really great experience for me! Building the game with <em>DDD</em> patterns and following <em>TDD</em> principles made the process feel more natural.</p>
+
+<p>There is no translation from and to domain terms thanks to the <em>ubiquitous language</em>. The testing was very explicit thanks again to domain events. In the end, I found the domain source code to be more obvious and to the point.</p>
+
+<p>I am still frustrated about the deployment part, which is still not done by the time I am writing, but it was out of the score of this whole experience.</p>
+
+<p>To conclude, I cannot recommend you enough to read about DDD and try it out yourself!</p>
+</main>
+</body>
+</html>

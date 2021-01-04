@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Composition API v Renderless Components - Let's use Vue 3's features to clean our components! - Thomas Ferro</title>
+    <link rel="stylesheet" href="/assets/styles/font.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/main.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/title.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/list.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/blockquote.css" type="text/css">
+    <link rel="stylesheet" href="/assets/styles/figure.css" type="text/css">
+</head>
+<body>
+    <header><a href="/">Thomas Ferro</a></header>
+    <main><h1>Composition API v Renderless Components - Let&rsquo;s use Vue 3&rsquo;s features to clean our components!</h1>
+
+<blockquote>
+<p>Iteratively and incrementally improve components quality</p>
+</blockquote>
+
+<p>Making the perfect component in the first draft is impossible. Impossible because you do not know exactly what will be needed before actually building the component. Impossible also because you will always learn new, more effective ways of doing things.</p>
+
+<p>Too many times have I overengineered, trying to make components that no one would ever need to modify or fix, components that was meant to meet all present and future use cases.</p>
+
+<p>Let me tell you the best place that I found for those components: in a post-mortem.</p>
+
+<p><em>Why is he telling me all that</em>, you may ask yourself. I wanted to introduce this article with this little digression to discuss the importance of iterations.</p>
+
+<p>First, build the minimum viable product, the basic implementation that works and does what is expected. Only then starts the refinement phase to ship a clean and maintainable code.</p>
+
+<p>You do not know if you are building the right thing until you try it. Ship it fast and get feedback.</p>
+
+<p>It is a concept you should be familiar with <a href="https://medium.com/@t.ferro184/tdd-in-action-debouncer-in-go-b0f7d7d75931">when doing TDD</a> or even if you recognize yourself in the Agile values.</p>
+
+<p>This article follows the same pattern, we will start with a component that works, even though it is far from being maintainable. Then we will incrementally improve it, without the new Composition API in the first place so we will be able to compare with previously existing tools.</p>
+
+<p>I will not discuss the mostly important matter of tests in this article. The reason being that I am not confident enough on the subject of Front-End testing to give you my opinion. I might dig into the subject in the future, but for now I leave you with a few resources:</p>
+
+<ul>
+<li><a href="https://vue-test-utils.vuejs.org/">Vue Test Utils - the official unit testing utility library for Vue.js</a>;</li>
+<li><a href="https://testing-library.com/">Testing Library - a collection of utilities that encourage &ldquo;good&rdquo; testing practices</a>. I haven&rsquo;t tried it yet, but the promise is good enough for me to share it with you.</li>
+</ul>
+
+<h2>The legacy component</h2>
+
+<p>Before starting any refactoring, we need to understand what we are working with.</p>
+
+<p>We will be creating a TODO-list with only a few features:</p>
+
+<ul>
+<li>Listing the tasks to do;</li>
+<li>Creating a new task;</li>
+<li>Tag a task as finishing.</li>
+</ul>
+
+<p>The first thing we want to do is to make the application work, so let us do it!</p>
+
+<pre><code class="language-html">&lt;template&gt;
+    &lt;h1&gt;My TODO list! ({{ doneCount }} / {{ totalCount }})&lt;/h1&gt;
+
+    &lt;!-- Error management --&gt;
+    &lt;p v-if=&quot;loadingError&quot;&gt;
+        {{ loadingError }}
+        &lt;button @click=&quot;loadTodos&quot;&gt;Reload&lt;/button&gt;
+    &lt;/p&gt;
+
+    &lt;ul v-else&gt;
+        &lt;li v-for=&quot;todo in todoList&quot; :key=&quot;todo.id&quot;&gt;
+            {{ todo.content }}
+            &lt;button @click=&quot;achieveATodo(todo.id)&quot;&gt;Validate&lt;/button&gt;
+        &lt;/li&gt;
+    &lt;/ul&gt;
+    &lt;form @submit.prevent=&quot;() =&gt; addTodo(newTodoContent)&quot;&gt;
+        &lt;label&gt;
+            What do you have to do?
+            &lt;input v-model=&quot;newTodoContent&quot;&gt;
+        &lt;/label&gt;
+        &lt;input type=&quot;submit&quot; value=&quot;Create&quot;&gt;
+        &lt;!-- Error management --&gt;
+        &lt;p v-if=&quot;todoCreationError&quot;&gt;{{ todoCreationError }}&lt;/p&gt;
+    &lt;/form&gt;
+&lt;/template&gt;
+
+&lt;script&gt;
+export default {
+    name: 'todo-list',
+    data() {
+        return {
+            loadingError: '',
+            todoList: [ ],
+            newTodoContent: '',
+            todoCreationError: '',
+        };
+    },
+    computed: {
+        doneCount() {
+            return this.todoList.filter(todo =&gt; todo.done).length;
+        },
+        totalCount() {
+            return this.todoList.length;
+        },
+    },
+    methods: {
+        loadTodos() {
+            this.loadingError = '';
+            fetch(import.meta.env.VITE_TODOS_URL)
+                .then((response) =&gt; {
+                    if (!response.ok) {
+                        throw new Error('An error has occurred while loading todos');
+                    }
+                    return response.json();
+                })
+                .then((todos) =&gt; {
+                    this.todoList = todos;
+                })
+                .catch((error) =&gt; {
+                    this.loadingError = error;
+                });
+        },
+        achieveATodo(id) {
+            // [...] Call the API to achieve the task
+        },
+        addTodo(content) {
+            this.todoCreationError = '';
+            fetch(import.meta.env.VITE_TODOS_URL, {
+                method: 'post',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ content })
+            })
+                .then((response) =&gt; {
+                    if (!response.ok) {
+                        throw new Error('An error has occurred while creating todo');
+                    }
+                    return response.json();
+                })
+                .then((newTodo) =&gt; {
+                    this.todoList = [
+                        ...this.todoList,
+                        newTodo,
+                    ]
+                })
+                .catch((error) =&gt; {
+                    this.todoCreationError = error;
+                });
+        }
+    },
+    created() {
+        this.loadTodos();
+    },
+}
+&lt;/script&gt;
+</code></pre>
+
+<p>Great, we have a working component. The client is happy since he can try the application even though it is a <em>work in progress</em>. Now that we know that his expectation are met, it is time to meet ours.</p>
+
+<p>Listing the pros and cons of the component can be useful in this case. It will allow us to have a complete picture of the state of the component and we will be able to prioritize the tasks to be done.</p>
+
+<p>On the bright side, the component works. He has every needed features and we managed to build it relatively fast. On the other hand, we have a lot to improve before shipping it:</p>
+
+<ul>
+<li>It has too many responsibilities (data fetching, business rules applying to the data, actions to add and modify data, the display of all of those information);</li>
+<li>Nothing here is reusable;</li>
+<li>It seems hard to maintain, at least it is hard to read through (a hundred lines, without the task achievement logic).</li>
+</ul>
+
+<p>Let us iterate a few times until we are happy about the result!</p>
+
+<h2>Before Vue 3, a first step toward clean components</h2>
+
+<p>This is kind of a bonus section where we will refactor the component using present tools. You can skip it if you are only interested in the Composition API or if you are not familiar with the advanced concept of <a href="https://vuejs.org/v2/guide/components-slots.html#Scoped-Slots"><em>scoped slots</em></a>. On the other hand, I do think that it is an interesting pattern to see if not to learn and use.</p>
+
+<p>I had the chance to work with a friend and former colleague, <a href="https://twitter.com/ecattez">Edouard</a> <a href="https://github.com/ecattez">Cattez</a>, on a project for a big French retailer. The Front-End of this project was made, you guessed it, using Vue.js.</p>
+
+<p>We had an issue with the code base that we could not name. For several months we worked hard on it, but could not figure what it was that make so difficult to add or modify features.</p>
+
+<p>This was about the same time where I started to really dive into the concepts of Clean Code, Clean Architecture and Software Craftsmanship.</p>
+
+<p>One day, when talking to that friend, we finally were able to find the underlying issue, our code base lacked separation of concerns.</p>
+
+<p>Every components in our application started to get quite big since they managed their template, data managing and styles. This way of writing components can work fine, as long as it does not get out of hands.</p>
+
+<p>Our components, however, managed a lot of business logic and associated templates. It causes a great amount of cognitive load to read through since the components held the intent <em>and</em> the implementation of the business logic.</p>
+
+<p>We needed a way to separate the concerns, to have the business logic in one place and the templates in another. We could drop the <em>Single File Components</em> or even write mixins, but those solutions sounded wrong in our context.</p>
+
+<p>The issue was not that the template and the data managing were in the same file. It had more to do with the fact that we mixed the intent and the implementation. Like an application without <em>interfaces</em>, only implementations.</p>
+
+<p>This is were we found out about the great article and pattern from <a href="https://adamwathan.me"><em>Adam Wathan</em></a>, <a href="https://adamwathan.me/renderless-components-in-vuejs/"><strong>Renderless Components in Vue.js</strong></a>.</p>
+
+<p>I will not dig too deep inside the matter since his article already explain it all. Just know that it works by creating a <strong>renderless component</strong>, responsible for the data managing. This renderless component then provides information for the &ldquo;<em>view component</em>&rdquo; to use thanks to <strong>scoped slots</strong>.</p>
+
+<p>How could we apply this pattern in our TODO-list? Let us first try to extract the logic inside a renderless component, named <strong><code>TodoListManager</code></strong>:</p>
+
+<pre><code class="language-html">&lt;!-- No template tag, we will use a render function --&gt;
+&lt;script&gt;
+export default {
+    name: 'todo-list-manager',
+    data() {
+        return {
+            loadingError: '',
+            todoList: [ ],
+            todoCreationError: '',
+        };
+    },
+    computed: {
+        doneCount() {
+            return this.todoList.filter(todo =&gt; todo.done).length;
+        },
+        totalCount() {
+            return this.todoList.length;
+        },
+    },
+    methods: {
+        loadTodos() {
+            this.loadingError = '';
+            fetch(import.meta.env.VITE_TODOS_URL)
+                .then((response) =&gt; {
+                    if (!response.ok) {
+                        throw new Error('An error has occurred while loading todos');
+                    }
+                    return response.json();
+                })
+                .then((todos) =&gt; {
+                    this.todoList = todos;
+                })
+                .catch((error) =&gt; {
+                    this.loadingError = error;
+                });
+        },
+        achieveATodo(id) {
+            // [...] Call the API to achieve the task
+        },
+        addTodo(content) {
+            this.todoCreationError = '';
+            fetch(import.meta.env.VITE_TODOS_URL, {
+                method: 'post',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ content })
+            })
+                .then((response) =&gt; {
+                    if (!response.ok) {
+                        throw new Error('An error has occurred while creating todo');
+                    }
+                    return response.json();
+                })
+                .then((newTodo) =&gt; {
+                    this.todoList = [
+                        ...this.todoList,
+                        newTodo,
+                    ]
+                })
+                .catch((error) =&gt; {
+                    this.todoCreationError = error;
+                });
+        }
+    },
+    created() {
+        this.loadTodos();
+    },
+    render() {
+        // Only display the content inside of the default slot, with every needed information
+        return this.$slots &amp;&amp; this.$slots.default &amp;&amp; this.$slots.default({
+            loadTodos: this.loadTodos,
+            loadingError: this.loadingError,
+            todoList: this.todoList,
+            doneCount: this.doneCount,
+            totalCount: this.totalCount,
+            achieveATodo: this.achieveATodo,
+            addTodo: this.addTodo,
+            todoCreationError: this.todoCreationError,
+        });
+    },
+}
+&lt;/script&gt;
+</code></pre>
+
+<p>While the view component could be like this one:</p>
+
+<pre><code class="language-html">&lt;template&gt;
+    &lt;!-- Use our renderless component --&gt;
+    &lt;!-- You can see that not only data are provided but also methods, computed, etc --&gt;
+    &lt;todo-list-manager v-slot=&quot;{
+        loadTodos,
+        loadingError,
+        todoList,
+        doneCount,
+        totalCount,
+        achieveATodo,
+        addTodo,
+        todoCreationError,
+    }&quot;&gt;
+        &lt;!-- Here, we can use every reactive information provided by the renderless component --&gt;
+        &lt;h1&gt;My TODO list! ({{ doneCount }} / {{ totalCount }})&lt;/h1&gt;
+
+        &lt;!-- Error management --&gt;
+        &lt;p v-if=&quot;loadingError&quot;&gt;
+            {{ loadingError }}
+            &lt;button @click=&quot;loadTodos&quot;&gt;Reload&lt;/button&gt;
+        &lt;/p&gt;
+
+        &lt;ul v-else&gt;
+            &lt;li v-for=&quot;todo in todoList&quot; :key=&quot;todo.id&quot;&gt;
+                {{ todo.content }}
+                &lt;button @click=&quot;achieveATodo(todo.id)&quot;&gt;Validate&lt;/button&gt;
+            &lt;/li&gt;
+        &lt;/ul&gt;
+        &lt;form @submit.prevent=&quot;() =&gt; addTodo(newTodoContent)&quot;&gt;
+            &lt;label&gt;
+                What do you have to do?
+                &lt;!-- newTodoContent may come from the view component or the renderless one --&gt;
+                &lt;input v-model=&quot;newTodoContent&quot;&gt;
+            &lt;/label&gt;
+            &lt;input type=&quot;submit&quot; value=&quot;Create&quot;&gt;
+            &lt;!-- Error management --&gt;
+            &lt;p v-if=&quot;todoCreationError&quot;&gt;{{ todoCreationError }}&lt;/p&gt;
+        &lt;/form&gt;
+    &lt;/todo-list-manager&gt;
+&lt;/template&gt;
+
+&lt;script&gt;
+// [...]
+&lt;/script&gt;
+</code></pre>
+
+<p>We could go even further by extracting the API call inside a JS module, creating a generic loading and error display management component, etc. Those enhancements are out of the scope of the article, but still great to do. What we can do now, however, is to keep iterating on the renderless component.</p>
+
+<p>Our <code>TodoListManager</code> seems greatly filled to me. What if we only need to list the tasks? What if we only need to create a new one?</p>
+
+<p>We could ignore the data exposed by the renderless component that we do not need. However, I find it more clear to explicitly use the renderless component responsible for the creation of a task and / or the one responsible for the listing. Here is how we can achieve that.</p>
+
+<p>First, the creation logic is extracted in a new renderless component, <strong><code>TodoCreationManager</code></strong>:</p>
+
+<pre><code class="language-html">&lt;script&gt;
+export default {
+    name: 'todo-creation-manager',
+    data() {
+        return {
+            todoCreationError: '',
+        };
+    },
+    emits: [ 'todo-created' ],
+    methods: {
+        addTodo(content) {
+            this.todoCreationError = '';
+            fetch(import.meta.env.VITE_TODOS_URL, {
+                method: 'post',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ content })
+            })
+                .then((response) =&gt; {
+                    if (!response.ok) {
+                        throw new Error('An error has occurred while creating todo');
+                    }
+                    return response.json();
+                })
+                .then((newTodo) =&gt; {
+                    // We don't have any reference to the list here
+                    // We can, however, send an event with the created task
+                    this.$emit('todo-created', newTodo)
+                })
+                .catch((error) =&gt; {
+                    this.todoCreationError = error;
+                });
+        }
+    },
+    render() {
+        return this.$slots &amp;&amp; this.$slots.default &amp;&amp; this.$slots.default({
+            addTodo: this.addTodo,
+            todoCreationError: this.todoCreationError,
+        });
+    },
+}
+&lt;/script&gt;
+</code></pre>
+
+<p>Our <strong><code>TodoListManager</code></strong> component is now only responsible for the fetching of the tasks list.</p>
+
+<p>Then, in our view component, we need to nest the two renderless component and use the logic from them both in the template:</p>
+
+<pre><code class="language-html">&lt;template&gt;
+    &lt;!-- Use our renderless component --&gt;
+    &lt;!-- You can see that not only data are provided but also methods, computed, etc --&gt;
+    &lt;todo-list-manager v-slot=&quot;{
+        loadTodos,
+        loadingError,
+        todoList,
+        doneCount,
+        totalCount,
+        achieveATodo,
+        todoCreated,
+    }&quot;&gt;
+        &lt;!-- A second renderless component, managing the creation of a task --&gt;
+        &lt;!-- 
+            When this component notify us that a new task is created,
+            we can add it directly to the list by calling a method
+            on the todo-list-manager renderless component
+         --&gt;
+        &lt;todo-creation-manager
+            v-slot=&quot;{
+                addTodo,
+                todoCreationError,
+            }&quot;
+            @todo-created=&quot;todoCreated&quot;
+        &gt;
+            &lt;!-- Here, we can use every reactive information provided by the renderless component --&gt;
+            &lt;h1&gt;My TODO list! ({{ doneCount }} / {{ totalCount }})&lt;/h1&gt;
+
+            &lt;!-- Error management --&gt;
+            &lt;p v-if=&quot;loadingError&quot;&gt;
+                {{ loadingError }}
+                &lt;button @click=&quot;loadTodos&quot;&gt;Reload&lt;/button&gt;
+            &lt;/p&gt;
+
+            &lt;ul v-else&gt;
+                &lt;li v-for=&quot;todo in todoList&quot; :key=&quot;todo.id&quot;&gt;
+                    {{ todo.content }}
+                    &lt;button @click=&quot;achieveATodo(todo.id)&quot;&gt;Validate&lt;/button&gt;
+                &lt;/li&gt;
+            &lt;/ul&gt;
+            &lt;form @submit.prevent=&quot;() =&gt; addTodo(newTodoContent)&quot;&gt;
+                &lt;label&gt;
+                    What do you have to do?
+                    &lt;!-- newTodoContent may come from the view component or the renderless one --&gt;
+                    &lt;input v-model=&quot;newTodoContent&quot;&gt;
+                &lt;/label&gt;
+                &lt;input type=&quot;submit&quot; value=&quot;Create&quot;&gt;
+                &lt;!-- Error management --&gt;
+                &lt;p v-if=&quot;todoCreationError&quot;&gt;{{ todoCreationError }}&lt;/p&gt;
+            &lt;/form&gt;
+        &lt;/todo-creation-manager&gt;
+    &lt;/todo-list-manager&gt;
+&lt;/template&gt;
+</code></pre>
+
+<hr />
+
+<p>It is a pattern that I adopted for every component with complex business logic. It helps keeping your view component clean and concise. However, since it is based on a renderless <em>component</em>, it adds one to the components tree each time you use it. <strong>It is also worth noting that it is an advance pattern that adds to the entry cost of your code base</strong>.</p>
+
+<p>How is this elegant solution compared to the new Composition API? Let us find out.</p>
+
+<h2>Refactoring in Vue 3 with the Composition API</h2>
+
+<p>In this section, I will assume that you are already familiar with the intent and the basic syntax of the Composition API.</p>
+
+<p>I made <a href="https://dev.to/thomasferro/vue-3-s-composition-api-and-the-segregation-of-concerns-1k5c">an article introducing the API in case you never heard about it</a>. Please read it first if you are afraid of being confused by the syntax.</p>
+
+<p>We have two implemented features:</p>
+
+<ul>
+<li>Fetch the todo list;</li>
+<li>Add a new one.</li>
+</ul>
+
+<p>You can try to follow the same pattern while implementing the task achievement if you want.</p>
+
+<p>Let us start with the list fetching. First, we will create a new ES module with a method that contains every pieces of information about the todo list. It is basically the same as the data inside the carryall component, but with a different syntax:</p>
+
+<pre><code class="language-js">import { ref, computed } from 'vue';
+
+export const useTodoList = () =&gt; {
+    // First, we create the reactive data and computed
+    const todoList = ref([ ]);
+    const doneCount = computed(() =&gt; {
+        return todoList.value.filter(todo =&gt; todo.done).length;
+    });
+    const totalCount = computed(() =&gt; {
+        return todoList.value.length;
+    });
+
+    const loadingError = ref('');
+
+    // Then we create the method that will manipulate those data
+    const loadTodos = () =&gt; {
+        loadingError.value = '';
+        fetch(import.meta.env.VITE_TODOS_URL)
+            .then((response) =&gt; {
+                if (!response.ok) {
+                    throw new Error('An error has occurred while loading todos');
+                }
+                return response.json();
+            })
+            .then((todos) =&gt; {
+                todoList.value = todos;
+            })
+            .catch((error) =&gt; {
+                loadingError.value = error;
+            });
+    }
+
+    const achieveATodo = (id) =&gt; {
+        // [...] Call the API to achieve the task
+        // Move it in a new method useTodoAchiever
+    };
+
+    // This method will be useful soon
+    const todoCreated = (newTodo) =&gt; {
+        todoList.value = [
+            ...todoList.value,
+            newTodo
+        ]
+    }
+    
+    // Finaly, we return the information that could be useful for our clients
+    return {
+        todoList,
+        doneCount,
+        totalCount,
+        loadingError,
+        loadTodos,
+        achieveATodo,
+        todoCreated,
+    }
+}
+</code></pre>
+
+<p>These information will be consumed by our view component&rsquo;s <code>setup</code> method. Here is the <strong><code>TodoList</code></strong>:</p>
+
+<pre><code class="language-html">&lt;template&gt;
+    &lt;!-- The template remains untouched --&gt;
+&lt;/template&gt;
+
+&lt;script&gt;
+import { useTodoList } from './index.js';
+
+export default {
+    name: 'todo-list',
+    setup() {
+        // You cannot destructure the returned value here or you will loose Vue's reactivity
+        const todoListData = useTodoList();
+
+        todoListData.loadTodos();
+
+        return {
+            todoList: todoListData.todoList,
+            doneCount: todoListData.doneCount,
+            totalCount: todoListData.totalCount,
+            loadingError: todoListData.loadingError,
+            loadTodos: todoListData.loadTodos,
+            achieveATodo: todoListData.achieveATodo,
+        }
+    },
+}
+&lt;/script&gt;
+</code></pre>
+
+<p>We can now do the same with the task creation process:</p>
+
+<pre><code class="language-js">export const useTodoCreation = ({
+    // Method called when a todo is created
+    onTodoCreated = () =&gt; {},
+}) =&gt; {
+    // Create the reactive data
+    const todoCreationError = ref('');
+
+    // The method used to create a new task
+    const addTodo = (content) =&gt; {
+        todoCreationError.value = '';
+        fetch(import.meta.env.VITE_TODOS_URL, {
+            method: 'post',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ content })
+        })
+            .then((response) =&gt; {
+                if (!response.ok) {
+                    throw new Error('An error has occurred while creating todo');
+                }
+                return response.json();
+            })
+            .then(onTodoCreated)
+            .catch((error) =&gt; {
+                todoCreationError.value = error;
+            });
+    }
+
+    // Return the needed information
+    return {
+        todoCreationError,
+        addTodo,
+    }
+}
+</code></pre>
+
+<p>Plug what is needed inside the view component:</p>
+
+<pre><code class="language-html">&lt;script&gt;
+import { ref } from 'vue';
+import { useTodoList, useTodoCreation } from './index.js';
+
+export default {
+    name: 'todo-list',
+    setup() {
+        // You cannot destructure the returned value here or you will loose Vue's reactivity
+        const todoListData = useTodoList();
+        const todoCreationData = useTodoCreation({
+            // Plug the method that will update the list when a task is created
+            onTodoCreated: todoListData.todoCreated,
+        });
+        const newTodoContent = ref('');
+
+        todoListData.loadTodos();
+
+        return {
+            todoList: todoListData.todoList,
+            doneCount: todoListData.doneCount,
+            totalCount: todoListData.totalCount,
+            loadingError: todoListData.loadingError,
+            loadTodos: todoListData.loadTodos,
+            achieveATodo: todoListData.achieveATodo,
+            todoCreationError: todoCreationData.todoCreationError,
+            addTodo: todoCreationData.addTodo,
+            newTodoContent,
+        }
+    },
+}
+&lt;/script&gt;
+</code></pre>
+
+<p>The last thing we can do is to create reusable component for the display of a task and for the creation form.</p>
+
+<pre><code class="language-html">&lt;!-- TodoCreation.vue --&gt;
+&lt;template&gt;
+    &lt;form @submit.prevent=&quot;() =&gt; addTodo(newTodoContent)&quot;&gt;
+        &lt;label&gt;
+            What do you have to do?
+            &lt;input v-model=&quot;newTodoContent&quot;&gt;
+        &lt;/label&gt;
+        &lt;input type=&quot;submit&quot; value=&quot;Create&quot;&gt;
+        &lt;!-- Error management --&gt;
+        &lt;p v-if=&quot;creationError&quot;&gt;{{ creationError }}&lt;/p&gt;
+    &lt;/form&gt;
+&lt;/template&gt;
+
+&lt;script&gt;
+export default {
+    name: 'todo-creation',
+    // Declare what events will our component emit
+    emits: [
+        'create-todo',
+    ],
+    props: {
+        creationError: String,
+    },
+    data() {
+        return {
+            newTodoContent: '',
+        }
+    },
+    methods: {
+        addTodo(content) {
+            this.$emit('create-todo', { content });
+        }
+    },
+}
+&lt;/script&gt;
+</code></pre>
+
+<pre><code class="language-html">&lt;!-- TodoDisplay.vue --&gt;
+&lt;template&gt;
+    {{ content }}
+    &lt;button @click=&quot;achieveTodo()&quot;&gt;Validate&lt;/button&gt;
+&lt;/template&gt;
+
+&lt;script&gt;
+export default {
+    name: 'todo-display',
+    emits: [
+        'achieve-todo',
+    ],
+    props: {
+        content: String,
+    },
+    methods: {
+        achieveTodo() {
+            this.$emit('achieve-todo');
+        }
+    },
+}
+&lt;/script&gt;
+</code></pre>
+
+<pre><code class="language-html">&lt;!-- TodoList.vue --&gt;
+&lt;template&gt;
+    &lt;!-- Here, we can use every reactive information provided by the renderless component --&gt;
+    &lt;h1&gt;My TODO list! ({{ doneCount }} / {{ totalCount }})&lt;/h1&gt;
+
+    &lt;!-- Error management --&gt;
+    &lt;p v-if=&quot;loadingError&quot;&gt;
+        {{ loadingError }}
+        &lt;button @click=&quot;loadTodos&quot;&gt;Reload&lt;/button&gt;
+    &lt;/p&gt;
+
+    &lt;ul v-else&gt;
+        &lt;li v-for=&quot;todo in todoList&quot; :key=&quot;todo.id&quot;&gt;
+            &lt;todo-display
+                :content=&quot;todo.content&quot;
+                @achieve-todo=&quot;() =&gt; achieveATodo(todo.id)&quot;
+            &gt;&lt;/todo-display&gt;
+        &lt;/li&gt;
+    &lt;/ul&gt;
+    &lt;todo-creation
+        :creation-error=&quot;todoCreationError&quot;
+        @create-todo=&quot;addTodo&quot;
+    &gt;&lt;/todo-creation&gt;
+&lt;/template&gt;
+
+&lt;script&gt;
+    // [...]
+&lt;/script&gt;
+</code></pre>
+
+<hr />
+
+<p>This is even cleaner than the solution using <em>renderless component</em> to me since it does not add components to the tree. The Composition API allows for a strict segregation of concerns. Our components can use business logic without knowing implementation details.</p>
+
+<p>It will, however and just like the <em>renderless components</em>, adds to the entry cost of our projects. That is why I will use it pragmatically and try to make it the most readable possible for newcomers. For instance, in this application, I only used it in the <strong><code>TodoList</code></strong> component.</p>
+
+<h2>On the next episode&hellip;</h2>
+
+<p>I hope that this series helps you better understand the benefits of Vue 3&rsquo;s Composition API! Please send feedback of your journey learning to use this new toy :)</p>
+
+<p>What do you think about those two methods? Which one is the clearer, the one that you will start to use?</p>
+
+<p>Next on the series, I will show you how to get rid of Vuex thanks to the Composition API.</p>
+</main>
+</body>
+</html>
