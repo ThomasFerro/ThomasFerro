@@ -10,7 +10,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - uses: ThomasFerro/golb@v0.0.8
+      - uses: ThomasFerro/golb@v0.1.0
         with:
           posts_path: /github/workspace/posts
           dist_path: /github/workspace/dist
@@ -18,8 +18,6 @@ jobs:
           blog_title: Thomas Ferro
           post_page_template_path: /github/workspace/blog/postPageTemplate.go.html
           home_page_template_path: /github/workspace/blog/homePageTemplate.go.html
-      - name: Test dist
-        run: ls $GITHUB_WORKSPACE/dist
       - name: Deploy to Github Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
