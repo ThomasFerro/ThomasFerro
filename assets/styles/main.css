@@ -15,6 +15,7 @@
 
 body {
     max-width: var(--max-body-width);
+    margin: 0 auto;
 }
 
 p {
