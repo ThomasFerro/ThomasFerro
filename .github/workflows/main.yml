@@ -2,6 +2,8 @@ name: Build blog
 
 on:
   workflow_dispatch:
+  release:
+    types: [published]
 
 jobs:
   build-blog:
