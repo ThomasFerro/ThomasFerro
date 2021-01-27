@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{.BlogTitle}}</title>
+    <link rel="shortcut icon" type="image/jpeg" href="assets/images/thomas-ferro.jpeg"/>
+    <link rel="shortcut icon" type="image/jpeg" href="/assets/images/thomas-ferro.jpeg"/>
     <link rel="stylesheet" href="/assets/styles/font.css" type="text/css">
     <link rel="stylesheet" href="/assets/styles/main.css" type="text/css">
     <link rel="stylesheet" href="/assets/styles/title.css" type="text/css">
@@ -12,11 +14,26 @@
     <link rel="stylesheet" href="/assets/styles/figure.css" type="text/css">
 </head>
 <body>
-    <header><a href="/">{{.BlogTitle}}</a></header>
-    <ul class="posts">
-        {{range $index, $post := .Posts}}
-            <li><a href="{{ getPostPath $post }}">{{ $post.Name }}</a></li>
-        {{end}}
-    </ul>
+    <header>
+        <h1><a href="/">{{.BlogTitle}}</a> - Web development engineer at <a href="https://www.sfeir.com/fr" target="_blank" rel="noopener noreferrer">Sfeir</a></h1>
+        <a href="https://dev.to/thomasferro" target="_blank" rel="noopener noreferrer"><img class="icon" src="/assets/images/dev-logo.svg" alt="DEV Community"></a>
+        <a href="https://www.linkedin.com/in/thomas-ferro/" target="_blank" rel="noopener noreferrer"><img class="icon" src="/assets/images/linkedin-logo.png" alt="LinkedIn"></a>
+        <a href="https://twitter.com/Thomas_Ferro_md" target="_blank" rel="noopener noreferrer"><img class="icon" src="/assets/images/twitter-logo.svg" alt="Twitter"></a>
+    </header>
+    <main>
+        <blockquote>Deliver business value that meets user needs.</blockquote>
+        <p>This sentence sums up what drives me in development. The idea of using our technical knowledge and work methodologies not as the ultimate goal, but to solve real users and clients issues.</p>
+        <p>Deliver this value should not be done at the expense of code and interactions quality.</p>
+        <p>Those ideas motivate me to train myself and apply approaches such as <em>Domain Driven Design</em> and <em>Test Driven Development</em>. This is also why I am agile in my work and in a process of continuous improvement.</p>
+        <p>
+            Please find my articles just bellow or in the <a href="https://dev.to/thomasferro" target="_blank" rel="noopener noreferrer">DEV Community</a>:
+            <ul class="posts">
+                {{range $index, $post := .Posts}}
+                    <li><a href="{{ getPostPath $post }}">{{ $post.Name }}</a></li>
+                {{end}}
+            </ul>
+        </p>
+    </main>
+    <footer>© Thomas Ferro - 2021</footer>
 </body>
 </html>

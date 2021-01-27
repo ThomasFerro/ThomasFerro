@@ -10,3 +10,7 @@ blockquote {
     font-style: italic;
     color: var(--font-color);
 }
+
+blockquote a {
+    --font-color: var(--main-font-color);
+}
