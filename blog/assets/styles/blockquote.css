@@ -12,5 +12,5 @@ blockquote {
 }
 
 blockquote a {
-    --font-color: var(--main-font-color);
+    --link-color: var(--main-font-color);
 }
