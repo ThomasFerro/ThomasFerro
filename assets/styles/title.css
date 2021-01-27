@@ -3,6 +3,10 @@ h1, h2, h3, h4, h5, h6, h7 {
     --title-arrow-width: calc(100% - 20px);
 }
 
+h1 a, h2 a, h3 a, h4 a, h5 a, h6 a, h7 a {
+    --font-color: var(--main-font-color);
+}
+
 h1 {
     --font-color: var(--main-color);
 

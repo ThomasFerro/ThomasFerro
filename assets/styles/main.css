@@ -25,3 +25,15 @@ p {
 a {
     color: var(--main-color);
 }
+
+img {
+    max-width: 100%;
+}
+
+pre {
+    overflow-x: auto;
+}
+
+header .icon {
+    height: 1.3em;
+}
